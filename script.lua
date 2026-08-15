@@ -1,25 +1,12 @@
 --[[
     ===================================================================================
-    ★ BLOX FRUITS ULTIMATE HUB V6.0 (REDZ / FLUENT SUPREME TITAN EDITION) ★
+    ★ BLOX FRUITS ULTIMATE HUB V6.1 (REDZ / FLUENT SUPREME TITAN EDITION) ★
     Tương thích 100% với tất cả Trình thực thi PC & Mobile:
     - Mobile: Delta, DeltaX, Arceus X, Codex, Fluxus Mobile, Hydrogen, VegaX
     - PC: Solara, Wave, Xeno, Celery, Swift, Synapse Z
-
-    Nâng cấp v6.0 Supreme:
-    1. Thiết kế UI/UX Dark Glassmorphism chuẩn phong cách Redz Hub / Fluent UI.
-    2. Tích hợp Player Profile Card realtime (Avatar, Level, Beli, Fragments, Sea).
-    3. Nút Icon Nổi Mobile Toggle (🔥) kéo thả siêu mượt cho DeltaX & màn hình cảm ứng.
-    4. Safe Auto Farm Engine V6 (Gravity Lock BodyVelocity chống rơi, Safe Height 14 studs).
-    5. Mob Freeze & Bring Mobs 3D V3 (Đóng băng quái PlatformStand + WalkSpeed 0 không bị quái đánh).
-    6. Fast Attack V3 (Kích hoạt Tool + Đồng bộ Combat Remote + VirtualUser Clicker liên hoàn).
-    7. Full Database 75+ Quest Lv 1 -> 2550, 45+ Đảo Sea 1/2/3, Bosses, Materials, Flowers.
-    8. Sea Events & Raid Dungeon Engine (Auto Sea Beast, Auto Raid Awaken Fruit).
-    9. Race V2 & V4 Mirage Island Helper (Auto nhặt hoa, Tracker đảo Mirage, Gear finder).
-    10. Fruit Sniper & Auto Gacha (Auto nhặt trái trên bản đồ, cất vào kho đồ, mua trái ngẫu nhiên).
-    11. Dual ESP Engine (Drawing API 2D Box/Tracer + BillboardGui Fallback Mobile).
-    12. Ultra Fix Lag FPS Booster & Black Screen Mode (Treo đêm tiết kiệm 85% Pin/CPU).
-    13. Persistent JSON Configuration Manager (Save/Load Config tự động).
-    14. Anti-AFK 20 phút & Server Hop tìm server ít người.
+    
+    Bản v6.1: Khắc phục triệt để lỗi nil index data khi chưa load game,
+    Mount UI an toàn tuyệt đối trên DeltaX qua gethui / PlayerGui.
     ===================================================================================
 --]]
 
@@ -56,10 +43,20 @@ local Lighting = GetService("Lighting")
 local TeleportService = GetService("TeleportService")
 local HttpService = GetService("HttpService")
 local VirtualUser = GetService("VirtualUser")
-local GuiService = GetService("GuiService")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
+
+-- Safe Level Getter (Tuyệt đối không bị văng nếu Data chưa load)
+local function GetPlayerLevelSafe()
+    local lvl = 1
+    pcall(function()
+        if LocalPlayer and LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Level") then
+            lvl = tonumber(LocalPlayer.Data.Level.Value) or 1
+        end
+    end)
+    return lvl
+end
 
 -- Safe GUI Container Resolver (gethui -> get_hidden_gui -> CoreGui -> PlayerGui)
 local function GetUIContainer()
@@ -70,18 +67,26 @@ local function GetUIContainer()
         elseif get_hidden_gui then
             container = get_hidden_gui()
         else
-            container = game:GetService("CoreGui")
+            local success, cg = pcall(function() return game:GetService("CoreGui") end)
+            if success and cg then
+                local testOk = pcall(function()
+                    local t = Instance.new("Folder")
+                    t.Parent = cg
+                    t:Destroy()
+                end)
+                if testOk then container = cg end
+            end
         end
     end)
     if container then return container end
-    return LocalPlayer:WaitForChild("PlayerGui")
+    return LocalPlayer:WaitForChild("PlayerGui", 10) or LocalPlayer.PlayerGui
 end
 
 -- Dọn dẹp phiên bản GUI cũ nếu đang chạy lại
-local parentUI = GetUIContainer()
-if parentUI:FindFirstChild("BF_Ultimate_Hub_Titan") then
-    parentUI.BF_Ultimate_Hub_Titan:Destroy()
-end
+pcall(function()
+    local oldUI = GetUIContainer():FindFirstChild("BF_Ultimate_Hub_Titan")
+    if oldUI then oldUI:Destroy() end
+end)
 
 -- Kiểm tra hỗ trợ Drawing API
 local HasDrawingAPI = pcall(function()
@@ -231,9 +236,8 @@ end
 -- [ MÔ-ĐUN 3: CƠ SỞ DỮ LIỆU TOÀN DIỆN (ISLANDS, QUESTS, BOSSES, FLOWERS, MATERIALS) ]
 -- ===================================================================================
 
--- 1. Database Toạ độ 45+ Đảo across Sea 1, Sea 2, Sea 3
 local Islands = {
-    -- SEA 1 (First Sea)
+    -- SEA 1
     ["Starter Island (Sea 1)"] = Vector3.new(979, 16, 1428),
     ["Jungle (Sea 1)"] = Vector3.new(-1612, 36, 148),
     ["Pirate Village (Sea 1)"] = Vector3.new(-1136, 4, 3848),
@@ -250,7 +254,7 @@ local Islands = {
     ["Underwater City (Sea 1)"] = Vector3.new(3864, 5, -1926),
     ["Fountain City (Sea 1)"] = Vector3.new(5127, 59, 4105),
 
-    -- SEA 2 (Second Sea)
+    -- SEA 2
     ["Cafe / Rose Town (Sea 2)"] = Vector3.new(-386, 73, 298),
     ["Kingdom of Rose Area 1 (Sea 2)"] = Vector3.new(-427, 73, 1836),
     ["Kingdom of Rose Area 2 (Sea 2)"] = Vector3.new(635, 73, 918),
@@ -264,7 +268,7 @@ local Islands = {
     ["Forgotten Island (Sea 2)"] = Vector3.new(-3055, 239, -10145),
     ["Dark Arena (Sea 2)"] = Vector3.new(3782, 15, -3499),
 
-    -- SEA 3 (Third Sea)
+    -- SEA 3
     ["Port Town (Sea 3)"] = Vector3.new(-290, 6, 5343),
     ["Hydra Island (Sea 3)"] = Vector3.new(5750, 610, -282),
     ["Great Tree (Sea 3)"] = Vector3.new(2284, 25, -6755),
@@ -275,13 +279,11 @@ local Islands = {
     ["Peanut Land (Sea 3)"] = Vector3.new(-2100, 38, -10150),
     ["Ice Cream Land (Sea 3)"] = Vector3.new(245, 25, -12200),
     ["Cake Land (Sea 3)"] = Vector3.new(-2000, 38, -12000),
-    ["Tiki Outpost (Sea 3)"] = Vector3.new(-16235, 9, 413),
-    ["Submerged Island (Sea 3)"] = Vector3.new(-16500, 15, 1200)
+    ["Tiki Outpost (Sea 3)"] = Vector3.new(-16235, 9, 413)
 }
 
--- 2. Database 75+ Quest Master (Level 1 -> 2550) cho 3 Sea
 local QuestData = {
-    -- =================== SEA 1 ===================
+    -- SEA 1
     {MinLvl = 1, MaxLvl = 9, Mob = "Bandit", QuestName = "BanditQuest1", QuestLvl = 1, NpcCFrame = CFrame.new(1059, 16, 1550), MobCFrame = CFrame.new(1145, 17, 1634)},
     {MinLvl = 10, MaxLvl = 14, Mob = "Monkey", QuestName = "JungleQuest", QuestLvl = 1, NpcCFrame = CFrame.new(-1598, 36, 153), MobCFrame = CFrame.new(-1618, 22, 142)},
     {MinLvl = 15, MaxLvl = 29, Mob = "Gorilla", QuestName = "JungleQuest", QuestLvl = 2, NpcCFrame = CFrame.new(-1598, 36, 153), MobCFrame = CFrame.new(-1240, 6, -495)},
@@ -309,7 +311,7 @@ local QuestData = {
     {MinLvl = 625, MaxLvl = 649, Mob = "Galley Pirate", QuestName = "FountainQuest", QuestLvl = 1, NpcCFrame = CFrame.new(5258, 38, 4050), MobCFrame = CFrame.new(5580, 40, 3950)},
     {MinLvl = 650, MaxLvl = 699, Mob = "Galley Captain", QuestName = "FountainQuest", QuestLvl = 2, NpcCFrame = CFrame.new(5258, 38, 4050), MobCFrame = CFrame.new(5650, 40, 4950)},
 
-    -- =================== SEA 2 ===================
+    -- SEA 2
     {MinLvl = 700, MaxLvl = 724, Mob = "Raider", QuestName = "Area1Quest", QuestLvl = 1, NpcCFrame = CFrame.new(-427, 73, 1836), MobCFrame = CFrame.new(-740, 73, 2400)},
     {MinLvl = 725, MaxLvl = 774, Mob = "Mercenary", QuestName = "Area1Quest", QuestLvl = 2, NpcCFrame = CFrame.new(-427, 73, 1836), MobCFrame = CFrame.new(-920, 73, 1600)},
     {MinLvl = 775, MaxLvl = 799, Mob = "Swan Pirate", QuestName = "Area2Quest", QuestLvl = 1, NpcCFrame = CFrame.new(635, 73, 918), MobCFrame = CFrame.new(880, 120, 1200)},
@@ -332,7 +334,7 @@ local QuestData = {
     {MinLvl = 1425, MaxLvl = 1449, Mob = "Sea Soldier", QuestName = "ForgottenQuest", QuestLvl = 1, NpcCFrame = CFrame.new(-3055, 239, -10145), MobCFrame = CFrame.new(-3200, 239, -9700)},
     {MinLvl = 1450, MaxLvl = 1499, Mob = "Water Fighter", QuestName = "ForgottenQuest", QuestLvl = 2, NpcCFrame = CFrame.new(-3055, 239, -10145), MobCFrame = CFrame.new(-3400, 239, -10500)},
 
-    -- =================== SEA 3 ===================
+    -- SEA 3
     {MinLvl = 1500, MaxLvl = 1524, Mob = "Pirate Millionaire", QuestName = "PortTownQuest", QuestLvl = 1, NpcCFrame = CFrame.new(-290, 6, 5343), MobCFrame = CFrame.new(-380, 6, 5550)},
     {MinLvl = 1525, MaxLvl = 1574, Mob = "Pistol Billionaire", QuestName = "PortTownQuest", QuestLvl = 2, NpcCFrame = CFrame.new(-290, 6, 5343), MobCFrame = CFrame.new(-50, 6, 5350)},
     {MinLvl = 1575, MaxLvl = 1599, Mob = "Dragon Crew Warrior", QuestName = "AmazonQuest", QuestLvl = 1, NpcCFrame = CFrame.new(5833, 52, -1100), MobCFrame = CFrame.new(6200, 52, -1300)},
@@ -361,12 +363,10 @@ local QuestData = {
     {MinLvl = 2500, MaxLvl = 2550, Mob = "Island Empress", QuestName = "TikiQuest2", QuestLvl = 1, NpcCFrame = CFrame.new(-16235, 9, 413), MobCFrame = CFrame.new(-16000, 9, 100)}
 }
 
--- 3. Database Bosses
 local BossDatabase = {
     ["Gorilla King"] = Vector3.new(-1128, 6, -450),
     ["The Saw"] = Vector3.new(-682, 15, 1600),
     ["Yeti"] = Vector3.new(1185, 106, -1518),
-    ["Mob Leader"] = Vector3.new(-2850, 7, 5350),
     ["Vice Admiral"] = Vector3.new(-4980, 23, 4400),
     ["Warden"] = Vector3.new(5190, 4, 690),
     ["Chief Warden"] = Vector3.new(5230, 4, 475),
@@ -376,9 +376,6 @@ local BossDatabase = {
     ["Wysper"] = Vector3.new(-7927, 5550, -637),
     ["Thunder God"] = Vector3.new(-7748, 5607, -2300),
     ["Cyborg"] = Vector3.new(6160, 28, 1480),
-    ["Diamond"] = Vector3.new(-1580, 198, -8),
-    ["Jeremy"] = Vector3.new(2316, 449, 785),
-    ["Fajita"] = Vector3.new(-2085, 73, -4208),
     ["Don Swan"] = Vector3.new(2285, 15, 805),
     ["Smoke Admiral"] = Vector3.new(-5080, 24, -5350),
     ["Awakened Ice Admiral"] = Vector3.new(6473, 297, -6844),
@@ -387,29 +384,13 @@ local BossDatabase = {
     ["Darkbeard"] = Vector3.new(3782, 15, -3499),
     ["Stone"] = Vector3.new(-1050, 40, 6780),
     ["Island Empress"] = Vector3.new(5730, 602, 199),
-    ["Kilo Admiral"] = Vector3.new(2880, 424, -7230),
     ["Captain Elephant"] = Vector3.new(-13393, 319, -8423),
     ["Beautiful Pirate"] = Vector3.new(5030, 315, -4060),
     ["Rip Indra"] = Vector3.new(-5333, 317, -2818),
     ["Cake Prince"] = Vector3.new(-2060, 38, -12040),
     ["Dough King"] = Vector3.new(-2060, 38, -12040),
     ["Cake Queen"] = Vector3.new(-710, 381, -11150),
-    ["Soul Reaper"] = Vector3.new(-9514, 142, 5535),
-    ["Leviathan"] = Vector3.new(-16500, 50, 4000)
-}
-
--- 4. Database Hoa Race V2
-local FlowerLocations = {
-    ["Red Flower"] = {
-        Vector3.new(-5400, 48, -750), Vector3.new(-5500, 48, -850),
-        Vector3.new(-650, 73, 1500), Vector3.new(-450, 73, 1600),
-        Vector3.new(-2200, 72, -3200), Vector3.new(-2500, 72, -3000)
-    },
-    ["Blue Flower"] = {
-        Vector3.new(920, 125, 32850), Vector3.new(980, 125, 32900),
-        Vector3.new(-3000, 239, -10100), Vector3.new(-3100, 239, -10200),
-        Vector3.new(6200, 294, -6700), Vector3.new(6100, 294, -6800)
-    }
+    ["Soul Reaper"] = Vector3.new(-9514, 142, 5535)
 }
 
 
@@ -417,9 +398,13 @@ local FlowerLocations = {
 -- [ MÔ-ĐUN 4: GIAO DIỆN REDZ / FLUENT UI GLASSMORPHISM & MOBILE CONTROLS ]
 -- ===================================================================================
 
+local parentUI = GetUIContainer()
+
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "BF_Ultimate_Hub_Titan"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.DisplayOrder = 999999
+ScreenGui.IgnoreGuiInset = true
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = parentUI
 
@@ -431,6 +416,7 @@ MobileFloatingBtn.Position = UDim2.new(0, 16, 0.22, 0)
 MobileFloatingBtn.BackgroundColor3 = Color3.fromRGB(15, 18, 28)
 MobileFloatingBtn.Text = "🔥"
 MobileFloatingBtn.TextSize = 26
+MobileFloatingBtn.ZIndex = 1000
 MobileFloatingBtn.Active = true
 MobileFloatingBtn.Draggable = true
 MobileFloatingBtn.Parent = ScreenGui
@@ -453,7 +439,8 @@ MainFrame.BackgroundColor3 = Color3.fromRGB(13, 15, 22)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.Visible = true -- Tự động bật giao diện ngay khi execute!
+MainFrame.ZIndex = 500
+MainFrame.Visible = true -- Bật giao diện ngay lập tức!
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
@@ -474,18 +461,12 @@ local TitleBar = Instance.new("Frame")
 TitleBar.Size = UDim2.new(1, 0, 0, 44)
 TitleBar.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
 TitleBar.BorderSizePixel = 0
+TitleBar.ZIndex = 501
 TitleBar.Parent = MainFrame
 
 local TitleCorner = Instance.new("UICorner")
 TitleCorner.CornerRadius = UDim.new(0, 12)
 TitleCorner.Parent = TitleBar
-
-local TitleGrad = Instance.new("UIGradient")
-TitleGrad.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 28, 45)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(13, 15, 22))
-})
-TitleGrad.Parent = TitleBar
 
 local TitleLogo = Instance.new("TextLabel")
 TitleLogo.Parent = TitleBar
@@ -494,17 +475,19 @@ TitleLogo.Position = UDim2.new(0, 12, 0, 0)
 TitleLogo.BackgroundTransparency = 1
 TitleLogo.Text = "⚡"
 TitleLogo.TextSize = 22
+TitleLogo.ZIndex = 502
 
 local TitleText = Instance.new("TextLabel")
 TitleText.Parent = TitleBar
 TitleText.Size = UDim2.new(1, -120, 1, 0)
 TitleText.Position = UDim2.new(0, 46, 0, 0)
 TitleText.BackgroundTransparency = 1
-TitleText.Text = "BLOX FRUITS TITAN HUB V6.0 (REDZ EDITION)"
+TitleText.Text = "BLOX FRUITS TITAN HUB V6.1 (REDZ EDITION)"
 TitleText.TextColor3 = Color3.fromRGB(0, 235, 255)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 15
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
+TitleText.ZIndex = 502
 
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = TitleBar
@@ -515,6 +498,7 @@ CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.TextSize = 14
+CloseBtn.ZIndex = 502
 
 local CloseCorner = Instance.new("UICorner")
 CloseCorner.CornerRadius = UDim.new(0, 6)
@@ -530,6 +514,7 @@ Sidebar.Size = UDim2.new(0, 185, 1, -44)
 Sidebar.Position = UDim2.new(0, 0, 0, 44)
 Sidebar.BackgroundColor3 = Color3.fromRGB(10, 12, 17)
 Sidebar.BorderSizePixel = 0
+Sidebar.ZIndex = 501
 Sidebar.Parent = MainFrame
 
 -- Profile Card
@@ -537,6 +522,7 @@ local ProfileCard = Instance.new("Frame")
 ProfileCard.Size = UDim2.new(1, -12, 0, 70)
 ProfileCard.Position = UDim2.new(0, 6, 0, 6)
 ProfileCard.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
+ProfileCard.ZIndex = 502
 ProfileCard.Parent = Sidebar
 
 local ProfileCorner = Instance.new("UICorner")
@@ -552,6 +538,7 @@ local AvatarImg = Instance.new("ImageLabel")
 AvatarImg.Size = UDim2.new(0, 44, 0, 44)
 AvatarImg.Position = UDim2.new(0, 8, 0, 13)
 AvatarImg.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
+AvatarImg.ZIndex = 503
 AvatarImg.Parent = ProfileCard
 
 local AvatarCorner = Instance.new("UICorner")
@@ -567,30 +554,32 @@ local ProfileName = Instance.new("TextLabel")
 ProfileName.Size = UDim2.new(1, -62, 0, 18)
 ProfileName.Position = UDim2.new(0, 58, 0, 14)
 ProfileName.BackgroundTransparency = 1
-ProfileName.Text = LocalPlayer.DisplayName
+ProfileName.Text = tostring(LocalPlayer.DisplayName or LocalPlayer.Name)
 ProfileName.TextColor3 = Color3.fromRGB(240, 240, 240)
 ProfileName.Font = Enum.Font.GothamBold
 ProfileName.TextSize = 13
 ProfileName.TextXAlignment = Enum.TextXAlignment.Left
 ProfileName.TextTruncate = Enum.TextTruncate.AtEnd
+ProfileName.ZIndex = 503
 ProfileName.Parent = ProfileCard
 
 local ProfileStat = Instance.new("TextLabel")
 ProfileStat.Size = UDim2.new(1, -62, 0, 16)
 ProfileStat.Position = UDim2.new(0, 58, 0, 34)
 ProfileStat.BackgroundTransparency = 1
-ProfileStat.Text = "Lv. " .. tostring(LocalPlayer.Data.Level.Value or 1)
+ProfileStat.Text = "Lv. " .. tostring(GetPlayerLevelSafe())
 ProfileStat.TextColor3 = Color3.fromRGB(0, 220, 255)
 ProfileStat.Font = Enum.Font.GothamMedium
 ProfileStat.TextSize = 12
 ProfileStat.TextXAlignment = Enum.TextXAlignment.Left
+ProfileStat.ZIndex = 503
 ProfileStat.Parent = ProfileCard
 
 -- Realtime Stat Updater
 task.spawn(function()
     while task.wait(3) do
         pcall(function()
-            ProfileStat.Text = "Lv. " .. tostring(LocalPlayer.Data.Level.Value)
+            ProfileStat.Text = "Lv. " .. tostring(GetPlayerLevelSafe())
         end)
     end
 end)
@@ -601,6 +590,7 @@ TabContainer.Size = UDim2.new(1, 0, 1, -85)
 TabContainer.Position = UDim2.new(0, 0, 0, 82)
 TabContainer.BackgroundTransparency = 1
 TabContainer.ScrollBarThickness = 2
+TabContainer.ZIndex = 502
 TabContainer.Parent = Sidebar
 
 local TabListLayout = Instance.new("UIListLayout")
@@ -613,6 +603,7 @@ local ContentArea = Instance.new("Frame")
 ContentArea.Size = UDim2.new(1, -195, 1, -54)
 ContentArea.Position = UDim2.new(0, 190, 0, 49)
 ContentArea.BackgroundTransparency = 1
+ContentArea.ZIndex = 501
 ContentArea.Parent = MainFrame
 
 local Pages = {}
@@ -628,6 +619,7 @@ local function CreateTab(name, icon)
     tabBtn.Font = Enum.Font.GothamMedium
     tabBtn.TextSize = 13
     tabBtn.TextXAlignment = Enum.TextXAlignment.Left
+    tabBtn.ZIndex = 503
     tabBtn.Parent = TabContainer
     
     local pad = Instance.new("UIPadding")
@@ -644,6 +636,7 @@ local function CreateTab(name, icon)
     page.ScrollBarThickness = 4
     page.ScrollBarImageColor3 = Color3.fromRGB(0, 200, 255)
     page.Visible = false
+    page.ZIndex = 502
     page.Parent = ContentArea
     
     local pageLayout = Instance.new("UIListLayout")
@@ -678,6 +671,7 @@ local function AddSection(parent, title)
     local sec = Instance.new("Frame")
     sec.Size = UDim2.new(1, -10, 0, 28)
     sec.BackgroundTransparency = 1
+    sec.ZIndex = 503
     sec.Parent = parent
     
     local lbl = Instance.new("TextLabel")
@@ -687,6 +681,7 @@ local function AddSection(parent, title)
     lbl.TextColor3 = Color3.fromRGB(0, 200, 255)
     lbl.Font = Enum.Font.GothamBold
     lbl.TextSize = 12
+    lbl.ZIndex = 504
     lbl.Parent = sec
 end
 
@@ -694,6 +689,7 @@ local function AddToggle(parent, text, default, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1, -10, 0, 40)
     frame.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
+    frame.ZIndex = 503
     frame.Parent = parent
     
     local corner = Instance.new("UICorner")
@@ -714,6 +710,7 @@ local function AddToggle(parent, text, default, callback)
     lbl.Font = Enum.Font.GothamMedium
     lbl.TextSize = 13
     lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 504
     lbl.Parent = frame
     
     local btn = Instance.new("TextButton")
@@ -724,6 +721,7 @@ local function AddToggle(parent, text, default, callback)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 12
+    btn.ZIndex = 504
     btn.Parent = frame
     
     local btnCorner = Instance.new("UICorner")
@@ -748,6 +746,7 @@ local function AddButton(parent, text, callback)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 13
+    btn.ZIndex = 503
     btn.Parent = parent
     
     local corner = Instance.new("UICorner")
@@ -761,6 +760,7 @@ local function AddSlider(parent, text, min, max, default, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1, -10, 0, 48)
     frame.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
+    frame.ZIndex = 503
     frame.Parent = parent
     
     local corner = Instance.new("UICorner")
@@ -781,6 +781,7 @@ local function AddSlider(parent, text, min, max, default, callback)
     lbl.Font = Enum.Font.GothamMedium
     lbl.TextSize = 13
     lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 504
     lbl.Parent = frame
     
     local sliderBg = Instance.new("TextButton")
@@ -788,6 +789,7 @@ local function AddSlider(parent, text, min, max, default, callback)
     sliderBg.Position = UDim2.new(0, 12, 0, 28)
     sliderBg.BackgroundColor3 = Color3.fromRGB(45, 52, 70)
     sliderBg.Text = ""
+    sliderBg.ZIndex = 504
     sliderBg.Parent = frame
     
     local sliderCorner = Instance.new("UICorner")
@@ -798,6 +800,7 @@ local function AddSlider(parent, text, min, max, default, callback)
     fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
     fill.BackgroundColor3 = Color3.fromRGB(0, 220, 255)
     fill.BorderSizePixel = 0
+    fill.ZIndex = 505
     fill.Parent = sliderBg
     
     local fillCorner = Instance.new("UICorner")
@@ -838,6 +841,7 @@ local function AddDropdown(parent, text, options, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1, -10, 0, 40)
     frame.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
+    frame.ZIndex = 503
     frame.Parent = parent
     
     local corner = Instance.new("UICorner")
@@ -858,6 +862,7 @@ local function AddDropdown(parent, text, options, callback)
     lbl.Font = Enum.Font.GothamMedium
     lbl.TextSize = 13
     lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 504
     lbl.Parent = frame
     
     local btn = Instance.new("TextButton")
@@ -869,6 +874,7 @@ local function AddDropdown(parent, text, options, callback)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 12
     btn.TextTruncate = Enum.TextTruncate.AtEnd
+    btn.ZIndex = 504
     btn.Parent = frame
     
     local btnCorner = Instance.new("UICorner")
@@ -997,7 +1003,7 @@ local function SafeWayPointTween(targetCFrame)
     end
 end
 
--- 3. MOB FREEZE & BRING MOBS 3D V3 (ĐÓNG BĂNG QUÁI KHÔNG CHO QUÁI ĐÁNH)
+-- 3. MOB FREEZE & BRING MOBS 3D V3
 local function BringAndFreezeMobs(targetCenterCF)
     if not Config.BringMobs then return end
     local enemies = Workspace:FindFirstChild("Enemies")
@@ -1061,17 +1067,9 @@ local function ExecuteFastAttack()
     end)
 end
 
--- 5. AUTO QUEST CHECKER & LEVEL MATCHER
-local function GetPlayerLevel()
-    local lvl = 1
-    pcall(function()
-        lvl = LocalPlayer.Data.Level.Value
-    end)
-    return lvl
-end
-
+-- 5. AUTO QUEST CHECKER
 local function GetQuestForCurrentLevel()
-    local level = GetPlayerLevel()
+    local level = GetPlayerLevelSafe()
     for _, q in ipairs(QuestData) do
         if level >= q.MinLvl and level <= q.MaxLvl then
             return q
@@ -1095,7 +1093,7 @@ local function TakeQuest(questData)
     end)
 end
 
--- 6. MAIN AUTO FARM LOOP (CHẠY ĐỘC LẬP TRÊN THREAD AN TOÀN)
+-- 6. MAIN AUTO FARM LOOP
 task.spawn(function()
     while task.wait(0.08) do
         local root = GetRoot()
@@ -1565,6 +1563,7 @@ local function ToggleBlackScreen(state)
             local sg = Instance.new("ScreenGui")
             sg.Name = "BF_Hub_BlackScreen_Titan"
             sg.ResetOnSpawn = false
+            sg.DisplayOrder = 999999
             sg.Parent = parentUI
             
             BlackScreenFrame = Instance.new("Frame")
@@ -1781,8 +1780,8 @@ AddButton(TabSettings, "💾 Lưu Cài Đặt (Save Config)", function()
     Notify("Config Manager", "Đã lưu cài đặt cấu hình thành công!", 3)
 end)
 
-Notify("🔥 BLOX FRUITS TITAN HUB V6.0", "Giao diện Redz Edition đã tải thành công!", 5)
-print("★ BLOX FRUITS TITAN HUB V6.0 (REDZ / FLUENT EDITION) LOADED SUCCESSFULLY ★")
+Notify("🔥 BLOX FRUITS TITAN HUB V6.1", "Giao diện Redz Edition đã tải thành công!", 5)
+print("★ BLOX FRUITS TITAN HUB V6.1 (REDZ / FLUENT EDITION) LOADED SUCCESSFULLY ★")
 
 
 -- ===================================================================================
