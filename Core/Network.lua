@@ -1,4 +1,10 @@
--- [ CORE: NETWORK.LUA - BULLETPROOF WEAPON & ATTACK ENGINE V8.2 ]
+--[[
+    ===================================================================================
+    ★ CORE: NETWORK.LUA - WEAPON & ATTACK ENGINE V9.0 ★
+    Khắc phục triệt để lỗi swap vũ khí liên tục, click ảo chính xác, đăng ký sát thương.
+    ===================================================================================
+--]]
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualUser = game:GetService("VirtualUser")
@@ -8,7 +14,6 @@ local LocalPlayer = Players.LocalPlayer
 
 local Network = {}
 
--- Danh sách tên Fighting Styles (Melee) trong Blox Fruits
 local MeleeNames = {
     "Combat", "Dark Step", "Electric", "Water Kung Fu", "Dragon Breath",
     "Superhuman", "Death Step", "Sharkman Karate", "Electric Claw",
@@ -49,6 +54,16 @@ function Network.GetPlayerBeli()
     return beli
 end
 
+function Network.GetPlayerFragments()
+    local frags = 0
+    pcall(function()
+        if LocalPlayer and LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Fragments") then
+            frags = tonumber(LocalPlayer.Data.Fragments.Value) or 0
+        end
+    end)
+    return frags
+end
+
 function Network.InvokeCommF(arg1, arg2, arg3, arg4)
     local res = nil
     pcall(function()
@@ -61,7 +76,6 @@ end
 
 local function IsToolMatch(tool, targetType)
     if not tool or not tool:IsA("Tool") then return false end
-    
     local tip = tool.ToolTip or ""
     local name = tool.Name
     
@@ -83,20 +97,18 @@ local function IsToolMatch(tool, targetType)
     return false
 end
 
--- TRANG BỊ VŨ KHÍ ỔN ĐỊNH: Chỉ đổi khi chưa cầm đúng loại, không equip liên tục trong vòng lặp
+-- TRANG BỊ VŨ KHÍ ỔN ĐỊNH: Chỉ rút vũ khí khi chưa cầm đúng loại
 function Network.EnsureWeaponEquipped(targetType)
     local char = Network.GetCharacter()
     local hum = Network.GetHumanoid()
     local backpack = LocalPlayer:FindFirstChild("Backpack")
     if not char or not hum then return nil end
     
-    -- Nếu đang cầm sẵn tool đúng loại, giữ nguyên
     local currentTool = char:FindFirstChildOfClass("Tool")
     if currentTool and IsToolMatch(currentTool, targetType) then
         return currentTool
     end
     
-    -- Tìm trong Backpack
     if backpack then
         for _, tool in pairs(backpack:GetChildren()) do
             if tool:IsA("Tool") and IsToolMatch(tool, targetType) then
@@ -104,7 +116,6 @@ function Network.EnsureWeaponEquipped(targetType)
                 return tool
             end
         end
-        -- Fallback nếu chưa cầm gì: cầm vũ khí đầu tiên
         if not currentTool then
             local firstTool = backpack:FindFirstChildOfClass("Tool")
             if firstTool then
@@ -113,11 +124,10 @@ function Network.EnsureWeaponEquipped(targetType)
             end
         end
     end
-    
     return currentTool
 end
 
--- THI HÀNH ĐÒN ĐÁNH (GỠ BỎ CAPTURECONTROLLER ĐỂ KHÔNG KẸT CHUỘT)
+-- XẢ ĐÒN TẤN CÔNG LIÊN HOÀN
 function Network.ExecuteFastAttack(targetWeaponType, targetMob)
     pcall(function()
         local tool = Network.EnsureWeaponEquipped(targetWeaponType or "Melee")
@@ -125,11 +135,9 @@ function Network.ExecuteFastAttack(targetWeaponType, targetMob)
             tool:Activate()
         end
         
-        -- Kích hoạt Click ảo nhẹ
         VirtualUser:Button1Down(Vector2.new(0.5, 0.5))
         VirtualUser:Button1Up(Vector2.new(0.5, 0.5))
         
-        -- Gửi Remote sát thương Blox Fruits
         local net = ReplicatedStorage:FindFirstChild("Modules") and ReplicatedStorage.Modules:FindFirstChild("Net")
         if net then
             if net:FindFirstChild("RegisterAttack") then
@@ -147,6 +155,15 @@ function Network.ActivateBusoHaki()
         local char = Network.GetCharacter()
         if char and not char:FindFirstChild("HasBuso") then
             Network.InvokeCommF("Buso")
+        end
+    end)
+end
+
+function Network.ActivateKenHaki()
+    pcall(function()
+        local char = Network.GetCharacter()
+        if char and not char:FindFirstChild("KenHaki") then
+            Network.InvokeCommF("Ken")
         end
     end)
 end

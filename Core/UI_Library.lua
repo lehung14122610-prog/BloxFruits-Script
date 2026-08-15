@@ -1,4 +1,10 @@
--- [ CORE: UI_LIBRARY.LUA - FLUENT REDZ SUPREME GLASSMORPHISM V8.2 ]
+--[[
+    ===================================================================================
+    ★ CORE: UI_LIBRARY.LUA - FLUENT REDZ SUPREME GLASSMORPHISM V9.0 ★
+    Khắc phục triệt để lỗi kẹt chuột, hỗ trợ cảm ứng kéo thả độc lập và HUD thời gian thực.
+    ===================================================================================
+--]]
+
 local Players = game:GetService("Players")
 local StatsService = game:GetService("Stats")
 local RunService = game:GetService("RunService")
@@ -31,7 +37,7 @@ ScreenGui.IgnoreGuiInset = true
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = parentUI
 
--- 1. NÚT ICON NỔI MOBILE TOGGLE (⚡) VỚI KÉO THẢ ĐỘC LẬP (KHÔNG DÍNH CHUỘT)
+-- 1. NÚT ICON NỔI MOBILE TOGGLE (⚡) KÉO THẢ ĐỘC LẬP
 local MobileFloatingBtn = Instance.new("TextButton")
 MobileFloatingBtn.Name = "MobileToggleIcon"
 MobileFloatingBtn.Size = UDim2.new(0, 50, 0, 50)
@@ -53,7 +59,6 @@ MobileBtnStroke.Color = Color3.fromRGB(0, 220, 255)
 MobileBtnStroke.Thickness = 2.2
 MobileBtnStroke.Parent = MobileFloatingBtn
 
--- Kéo thả an toàn cho Nút Nổi
 local btnDragging = false
 local btnDragStart = nil
 local btnStartPos = nil
@@ -66,14 +71,14 @@ MobileFloatingBtn.InputBegan:Connect(function(input)
     end
 end)
 
--- 2. KHUNG CHÍNH FLUENT GLASSMORPHISM (MAIN FRAME - GỠ BỎ DRAGGABLE LỖI)
+-- 2. KHUNG CHÍNH FLUENT GLASSMORPHISM (MAIN FRAME)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 600, 0, 390)
 MainFrame.Position = UDim2.new(0.5, -300, 0.5, -195)
 MainFrame.BackgroundColor3 = Color3.fromRGB(11, 13, 19)
 MainFrame.BorderSizePixel = 0
-MainFrame.Active = false -- Tắt Active toàn khung để không kẹt con trỏ chuột
+MainFrame.Active = false
 MainFrame.ZIndex = 500
 MainFrame.Visible = true
 MainFrame.Parent = ScreenGui
@@ -91,11 +96,11 @@ MobileFloatingBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- 3. THANH TIÊU ĐỀ (TITLE BAR) & HỆ THỐNG KÉO THẢ CHUẨN FLUENT UI
+-- 3. THANH TIÊU ĐỀ TITLEBAR VÀ KÉO THẢ AN TOÀN
 local TitleBar = Instance.new("Frame")
 TitleBar.Size = UDim2.new(1, 0, 0, 44)
 TitleBar.BackgroundColor3 = Color3.fromRGB(16, 20, 30)
-TitleBar.Active = true -- Chỉ TitleBar mới được kéo thả
+TitleBar.Active = true
 TitleBar.ZIndex = 501
 TitleBar.Parent = MainFrame
 
@@ -108,14 +113,13 @@ TitleText.Parent = TitleBar
 TitleText.Size = UDim2.new(0, 230, 1, 0)
 TitleText.Position = UDim2.new(0, 14, 0, 0)
 TitleText.BackgroundTransparency = 1
-TitleText.Text = "⚡ BLOX FRUITS TITAN V8.2"
+TitleText.Text = "⚡ BLOX FRUITS TITAN V9.0"
 TitleText.TextColor3 = Color3.fromRGB(0, 235, 255)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 14
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 TitleText.ZIndex = 502
 
--- Kéo thả chuẩn Fluent: Chỉ kích hoạt khi bấm giữ TitleBar
 local isDragging = false
 local dragStart = nil
 local startPos = nil
@@ -146,7 +150,7 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
--- HUD FPS & Ping & Sea
+-- HUD FPS & PING
 local HudContainer = Instance.new("Frame")
 HudContainer.Size = UDim2.new(0, 240, 1, -12)
 HudContainer.Position = UDim2.new(1, -290, 0, 6)
@@ -206,7 +210,7 @@ CloseBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = false
 end)
 
--- 4. SIDEBAR VỚI AVATAR PROFILE CARD
+-- 4. SIDEBAR VỚI AVATAR PROFILE
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 170, 1, -44)
 Sidebar.Position = UDim2.new(0, 0, 0, 44)
@@ -275,7 +279,6 @@ task.spawn(function()
     end
 end)
 
--- Sidebar Tabs Container
 local TabContainer = Instance.new("ScrollingFrame")
 TabContainer.Size = UDim2.new(1, 0, 1, -74)
 TabContainer.Position = UDim2.new(0, 0, 0, 70)

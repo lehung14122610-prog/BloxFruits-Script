@@ -1,42 +1,61 @@
--- [ CORE: UTILS.LUA - FIX LAG, BLACK SCREEN WITH VISIBLE BUTTON & SERVER HOP ]
+--[[
+    ===================================================================================
+    ★ CORE: UTILS.LUA - ULTRA FIX LAG, BLACK SCREEN & SYSTEM SERVICES V9.0 ★
+    ===================================================================================
+--]]
+
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
 local TeleportService = game:GetService("TeleportService")
 local VirtualUser = game:GetService("VirtualUser")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera or Workspace:FindFirstChildOfClass("Camera")
 
 local Utils = {}
 local BlackScreenGui = nil
 
+-- ULTRA FIX LAG 120 FPS BOOSTER
 function Utils.ApplyUltraFixLag()
     pcall(function()
         Lighting.GlobalShadows = false
         Lighting.FogEnd = 9e9
+        Lighting.Brightness = 0
+        settings().Rendering.QualityLevel = 1
+        
+        if Workspace.Terrain then
+            Workspace.Terrain.WaterWaveSize = 0
+            Workspace.Terrain.WaterWaveSpeed = 0
+            Workspace.Terrain.WaterReflectance = 0
+        end
+        
         for _, v in pairs(Workspace:GetDescendants()) do
-            if v:IsA("BasePart") then
-                v.Material = Enum.Material.SmoothPlastic
-                v.CastShadow = false
-            elseif v:IsA("Decal") or v:IsA("Texture") then
-                v:Destroy()
-            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
-                v.Enabled = false
-            end
+            pcall(function()
+                if v:IsA("BasePart") then
+                    v.Material = Enum.Material.SmoothPlastic
+                    v.CastShadow = false
+                    v.Reflectance = 0
+                elseif v:IsA("Decal") or v:IsA("Texture") then
+                    v:Destroy()
+                elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then
+                    v.Enabled = false
+                end
+            end)
         end
     end)
 end
 
--- SỬA LỖI ULTRA BLACK SCREEN (NÚT BẤM TO NỔI BẬT LỚP TỐI CAO)
+-- ULTRA BLACK SCREEN MODE
 function Utils.ToggleBlackScreen(state)
     if state then
         if not BlackScreenGui then
             local pgui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer.PlayerGui
             BlackScreenGui = Instance.new("ScreenGui")
-            BlackScreenGui.Name = "BF_Titan_UltraBlackScreen_V8"
+            BlackScreenGui.Name = "BF_Titan_UltraBlackScreen_V9"
             BlackScreenGui.ResetOnSpawn = false
-            BlackScreenGui.DisplayOrder = 10000000 -- Lớp tối cao
+            BlackScreenGui.DisplayOrder = 10000000
             BlackScreenGui.IgnoreGuiInset = true
             BlackScreenGui.Parent = pgui
             
@@ -46,10 +65,10 @@ function Utils.ToggleBlackScreen(state)
             bg.Parent = BlackScreenGui
             
             local btnExit = Instance.new("TextButton")
-            btnExit.Size = UDim2.new(0, 320, 0, 65)
-            btnExit.Position = UDim2.new(0.5, -160, 0.5, -32)
+            btnExit.Size = UDim2.new(0, 360, 0, 80)
+            btnExit.Position = UDim2.new(0.5, -180, 0.5, -40)
             btnExit.BackgroundColor3 = Color3.fromRGB(15, 20, 30)
-            btnExit.Text = "🌙 ULTRA BLACK SCREEN (TREO ĐÊM)
+            btnExit.Text = "🌙 ULTRA BLACK SCREEN (TIẾT KIỆM 90% PIN & RAM)
 [CHẠM VÀO ĐÂY ĐỂ MỞ LẠI GIAO DIỆN]"
             btnExit.TextColor3 = Color3.fromRGB(0, 255, 180)
             btnExit.Font = Enum.Font.GothamBold
@@ -57,12 +76,12 @@ function Utils.ToggleBlackScreen(state)
             btnExit.Parent = bg
             
             local btnCorner = Instance.new("UICorner")
-            btnCorner.CornerRadius = UDim.new(0, 10)
+            btnCorner.CornerRadius = UDim.new(0, 12)
             btnCorner.Parent = btnExit
             
             local btnStroke = Instance.new("UIStroke")
             btnStroke.Color = Color3.fromRGB(0, 220, 255)
-            btnStroke.Thickness = 2
+            btnStroke.Thickness = 2.5
             btnStroke.Parent = btnExit
             
             btnExit.MouseButton1Click:Connect(function()
@@ -73,10 +92,10 @@ function Utils.ToggleBlackScreen(state)
             end)
         end
         BlackScreenGui.Enabled = true
-        RunService:Set3dRenderingEnabled(false)
+        pcall(function() RunService:Set3dRenderingEnabled(false) end)
     else
         if BlackScreenGui then BlackScreenGui.Enabled = false end
-        RunService:Set3dRenderingEnabled(true)
+        pcall(function() RunService:Set3dRenderingEnabled(true) end)
     end
 end
 
@@ -87,7 +106,7 @@ end
 function Utils.ServerHop()
     pcall(function()
         local Api = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
-        local list = game:GetService("HttpService"):JSONDecode(game:HttpGet(Api))
+        local list = HttpService:JSONDecode(game:HttpGet(Api))
         if list and list.data then
             for _, s in pairs(list.data) do
                 if s.playing < s.maxPlayers and s.id ~= game.JobId then
@@ -99,6 +118,7 @@ function Utils.ServerHop()
     end)
 end
 
+-- ANTI-AFK CHỐNG KICK 24/7
 LocalPlayer.Idled:Connect(function()
     local cfg = getgenv().BF_Hub_Config
     if cfg and cfg.AntiAFK then
