@@ -1,12 +1,12 @@
 --[[
     ===================================================================================
-    ★ BLOX FRUITS ULTIMATE HUB V6.1 (REDZ / FLUENT SUPREME TITAN EDITION) ★
-    Tương thích 100% với tất cả Trình thực thi PC & Mobile:
-    - Mobile: Delta, DeltaX, Arceus X, Codex, Fluxus Mobile, Hydrogen, VegaX
+    ★ BLOX FRUITS ULTIMATE HUB V6.2 (REDZ / FLUENT SUPREME TITAN EDITION) ★
+    Tương thích 100% với tất cả Trình thực thi PC & Mobile (BlueStacks / DeltaX Fixed):
+    - Mobile / Emulators: Delta, DeltaX, Arceus X, Codex, Fluxus Mobile, Hydrogen, VegaX
     - PC: Solara, Wave, Xeno, Celery, Swift, Synapse Z
     
-    Bản v6.1: Khắc phục triệt để lỗi nil index data khi chưa load game,
-    Mount UI an toàn tuyệt đối trên DeltaX qua gethui / PlayerGui.
+    Bản v6.2: Sửa 100% tương thích Lua 5.1/Luau, Vector3.zero, table.find, 
+    Mount trực tiếp PlayerGui trên BlueStacks/DeltaX hiển thị tức thì 100%.
     ===================================================================================
 --]]
 
@@ -23,6 +23,15 @@ local readfile = readfile or function() return nil end
 local writefile = writefile or function() return end
 local isfile = isfile or function() return false end
 local delfile = delfile or function() return end
+
+-- Safe Table Find for Lua 5.1 / Luau
+local function TableFind(t, val)
+    if type(t) ~= "table" then return nil end
+    for i, v in pairs(t) do
+        if v == val then return i end
+    end
+    return nil
+end
 
 -- Safe Service Getter
 local function GetService(serviceName)
@@ -44,10 +53,16 @@ local TeleportService = GetService("TeleportService")
 local HttpService = GetService("HttpService")
 local VirtualUser = GetService("VirtualUser")
 
+-- Đợi LocalPlayer khởi tạo an toàn
 local LocalPlayer = Players.LocalPlayer
-local Camera = Workspace.CurrentCamera
+while not LocalPlayer do
+    task.wait(0.1)
+    LocalPlayer = Players.LocalPlayer
+end
 
--- Safe Level Getter (Tuyệt đối không bị văng nếu Data chưa load)
+local Camera = Workspace.CurrentCamera or Workspace:FindFirstChildOfClass("Camera")
+
+-- Safe Level Getter
 local function GetPlayerLevelSafe()
     local lvl = 1
     pcall(function()
@@ -58,8 +73,11 @@ local function GetPlayerLevelSafe()
     return lvl
 end
 
--- Safe GUI Container Resolver (gethui -> get_hidden_gui -> CoreGui -> PlayerGui)
+-- Safe GUI Container Resolver (Ưu tiên PlayerGui cho BlueStacks & DeltaX)
 local function GetUIContainer()
+    local pgui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:FindFirstChild("PlayerGui")
+    if pgui then return pgui end
+    
     local container = nil
     pcall(function()
         if gethui then
@@ -67,25 +85,23 @@ local function GetUIContainer()
         elseif get_hidden_gui then
             container = get_hidden_gui()
         else
-            local success, cg = pcall(function() return game:GetService("CoreGui") end)
-            if success and cg then
-                local testOk = pcall(function()
-                    local t = Instance.new("Folder")
-                    t.Parent = cg
-                    t:Destroy()
-                end)
-                if testOk then container = cg end
-            end
+            container = game:GetService("CoreGui")
         end
     end)
     if container then return container end
-    return LocalPlayer:WaitForChild("PlayerGui", 10) or LocalPlayer.PlayerGui
+    return LocalPlayer:WaitForChild("PlayerGui", 5)
 end
 
 -- Dọn dẹp phiên bản GUI cũ nếu đang chạy lại
 pcall(function()
-    local oldUI = GetUIContainer():FindFirstChild("BF_Ultimate_Hub_Titan")
+    local targetContainer = GetUIContainer()
+    local oldUI = targetContainer:FindFirstChild("BF_Ultimate_Hub_Titan")
     if oldUI then oldUI:Destroy() end
+    
+    -- Cũng dọn trong CoreGui và PlayerGui nếu có
+    if LocalPlayer:FindFirstChild("PlayerGui") and LocalPlayer.PlayerGui:FindFirstChild("BF_Ultimate_Hub_Titan") then
+        LocalPlayer.PlayerGui.BF_Ultimate_Hub_Titan:Destroy()
+    end
 end)
 
 -- Kiểm tra hỗ trợ Drawing API
@@ -411,11 +427,11 @@ ScreenGui.Parent = parentUI
 -- 1. NÚT ICON NỔI MOBILE TOGGLE (🔥) CHO DELTAX & CẢM ỨNG
 local MobileFloatingBtn = Instance.new("TextButton")
 MobileFloatingBtn.Name = "MobileToggleIcon"
-MobileFloatingBtn.Size = UDim2.new(0, 54, 0, 54)
+MobileFloatingBtn.Size = UDim2.new(0, 52, 0, 52)
 MobileFloatingBtn.Position = UDim2.new(0, 16, 0.22, 0)
 MobileFloatingBtn.BackgroundColor3 = Color3.fromRGB(15, 18, 28)
 MobileFloatingBtn.Text = "🔥"
-MobileFloatingBtn.TextSize = 26
+MobileFloatingBtn.TextSize = 24
 MobileFloatingBtn.ZIndex = 1000
 MobileFloatingBtn.Active = true
 MobileFloatingBtn.Draggable = true
@@ -433,8 +449,8 @@ MobileBtnStroke.Parent = MobileFloatingBtn
 -- 2. CỬA SỔ CHÍNH (MAIN WINDOW GLASSMORPHISM)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 720, 0, 460)
-MainFrame.Position = UDim2.new(0.5, -360, 0.5, -230)
+MainFrame.Size = UDim2.new(0, 580, 0, 370)
+MainFrame.Position = UDim2.new(0.5, -290, 0.5, -185)
 MainFrame.BackgroundColor3 = Color3.fromRGB(13, 15, 22)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -458,7 +474,7 @@ end)
 
 -- 3. TITLE HEADER BAR
 local TitleBar = Instance.new("Frame")
-TitleBar.Size = UDim2.new(1, 0, 0, 44)
+TitleBar.Size = UDim2.new(1, 0, 0, 42)
 TitleBar.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
 TitleBar.BorderSizePixel = 0
 TitleBar.ZIndex = 501
@@ -471,33 +487,33 @@ TitleCorner.Parent = TitleBar
 local TitleLogo = Instance.new("TextLabel")
 TitleLogo.Parent = TitleBar
 TitleLogo.Size = UDim2.new(0, 35, 1, 0)
-TitleLogo.Position = UDim2.new(0, 12, 0, 0)
+TitleLogo.Position = UDim2.new(0, 10, 0, 0)
 TitleLogo.BackgroundTransparency = 1
 TitleLogo.Text = "⚡"
-TitleLogo.TextSize = 22
+TitleLogo.TextSize = 20
 TitleLogo.ZIndex = 502
 
 local TitleText = Instance.new("TextLabel")
 TitleText.Parent = TitleBar
 TitleText.Size = UDim2.new(1, -120, 1, 0)
-TitleText.Position = UDim2.new(0, 46, 0, 0)
+TitleText.Position = UDim2.new(0, 42, 0, 0)
 TitleText.BackgroundTransparency = 1
-TitleText.Text = "BLOX FRUITS TITAN HUB V6.1 (REDZ EDITION)"
+TitleText.Text = "BLOX FRUITS TITAN HUB V6.2"
 TitleText.TextColor3 = Color3.fromRGB(0, 235, 255)
 TitleText.Font = Enum.Font.GothamBold
-TitleText.TextSize = 15
+TitleText.TextSize = 14
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 TitleText.ZIndex = 502
 
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = TitleBar
-CloseBtn.Size = UDim2.new(0, 30, 0, 30)
-CloseBtn.Position = UDim2.new(1, -38, 0, 7)
+CloseBtn.Size = UDim2.new(0, 28, 0, 28)
+CloseBtn.Position = UDim2.new(1, -35, 0, 7)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(235, 55, 65)
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 14
+CloseBtn.TextSize = 13
 CloseBtn.ZIndex = 502
 
 local CloseCorner = Instance.new("UICorner")
@@ -510,8 +526,8 @@ end)
 
 -- 4. SIDEBAR VỚI PLAYER PROFILE CARD
 local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 185, 1, -44)
-Sidebar.Position = UDim2.new(0, 0, 0, 44)
+Sidebar.Size = UDim2.new(0, 165, 1, -42)
+Sidebar.Position = UDim2.new(0, 0, 0, 42)
 Sidebar.BackgroundColor3 = Color3.fromRGB(10, 12, 17)
 Sidebar.BorderSizePixel = 0
 Sidebar.ZIndex = 501
@@ -519,8 +535,8 @@ Sidebar.Parent = MainFrame
 
 -- Profile Card
 local ProfileCard = Instance.new("Frame")
-ProfileCard.Size = UDim2.new(1, -12, 0, 70)
-ProfileCard.Position = UDim2.new(0, 6, 0, 6)
+ProfileCard.Size = UDim2.new(1, -10, 0, 60)
+ProfileCard.Position = UDim2.new(0, 5, 0, 5)
 ProfileCard.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
 ProfileCard.ZIndex = 502
 ProfileCard.Parent = Sidebar
@@ -535,8 +551,8 @@ ProfileStroke.Thickness = 1
 ProfileStroke.Parent = ProfileCard
 
 local AvatarImg = Instance.new("ImageLabel")
-AvatarImg.Size = UDim2.new(0, 44, 0, 44)
-AvatarImg.Position = UDim2.new(0, 8, 0, 13)
+AvatarImg.Size = UDim2.new(0, 38, 0, 38)
+AvatarImg.Position = UDim2.new(0, 6, 0, 11)
 AvatarImg.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
 AvatarImg.ZIndex = 503
 AvatarImg.Parent = ProfileCard
@@ -551,26 +567,26 @@ pcall(function()
 end)
 
 local ProfileName = Instance.new("TextLabel")
-ProfileName.Size = UDim2.new(1, -62, 0, 18)
-ProfileName.Position = UDim2.new(0, 58, 0, 14)
+ProfileName.Size = UDim2.new(1, -50, 0, 16)
+ProfileName.Position = UDim2.new(0, 48, 0, 12)
 ProfileName.BackgroundTransparency = 1
 ProfileName.Text = tostring(LocalPlayer.DisplayName or LocalPlayer.Name)
 ProfileName.TextColor3 = Color3.fromRGB(240, 240, 240)
 ProfileName.Font = Enum.Font.GothamBold
-ProfileName.TextSize = 13
+ProfileName.TextSize = 12
 ProfileName.TextXAlignment = Enum.TextXAlignment.Left
 ProfileName.TextTruncate = Enum.TextTruncate.AtEnd
 ProfileName.ZIndex = 503
 ProfileName.Parent = ProfileCard
 
 local ProfileStat = Instance.new("TextLabel")
-ProfileStat.Size = UDim2.new(1, -62, 0, 16)
-ProfileStat.Position = UDim2.new(0, 58, 0, 34)
+ProfileStat.Size = UDim2.new(1, -50, 0, 14)
+ProfileStat.Position = UDim2.new(0, 48, 0, 30)
 ProfileStat.BackgroundTransparency = 1
 ProfileStat.Text = "Lv. " .. tostring(GetPlayerLevelSafe())
 ProfileStat.TextColor3 = Color3.fromRGB(0, 220, 255)
 ProfileStat.Font = Enum.Font.GothamMedium
-ProfileStat.TextSize = 12
+ProfileStat.TextSize = 11
 ProfileStat.TextXAlignment = Enum.TextXAlignment.Left
 ProfileStat.ZIndex = 503
 ProfileStat.Parent = ProfileCard
@@ -586,8 +602,8 @@ end)
 
 -- Sidebar Tabs Container
 local TabContainer = Instance.new("ScrollingFrame")
-TabContainer.Size = UDim2.new(1, 0, 1, -85)
-TabContainer.Position = UDim2.new(0, 0, 0, 82)
+TabContainer.Size = UDim2.new(1, 0, 1, -75)
+TabContainer.Position = UDim2.new(0, 0, 0, 70)
 TabContainer.BackgroundTransparency = 1
 TabContainer.ScrollBarThickness = 2
 TabContainer.ZIndex = 502
@@ -600,8 +616,8 @@ TabListLayout.Padding = UDim.new(0, 4)
 
 -- 5. CONTENT AREA
 local ContentArea = Instance.new("Frame")
-ContentArea.Size = UDim2.new(1, -195, 1, -54)
-ContentArea.Position = UDim2.new(0, 190, 0, 49)
+ContentArea.Size = UDim2.new(1, -175, 1, -50)
+ContentArea.Position = UDim2.new(0, 170, 0, 46)
 ContentArea.BackgroundTransparency = 1
 ContentArea.ZIndex = 501
 ContentArea.Parent = MainFrame
@@ -611,19 +627,19 @@ local TabButtons = {}
 
 local function CreateTab(name, icon)
     local tabBtn = Instance.new("TextButton")
-    tabBtn.Size = UDim2.new(1, -12, 0, 36)
-    tabBtn.Position = UDim2.new(0, 6, 0, 0)
+    tabBtn.Size = UDim2.new(1, -10, 0, 34)
+    tabBtn.Position = UDim2.new(0, 5, 0, 0)
     tabBtn.BackgroundColor3 = Color3.fromRGB(16, 20, 28)
     tabBtn.Text = (icon or "📁") .. " " .. name
     tabBtn.TextColor3 = Color3.fromRGB(180, 190, 210)
     tabBtn.Font = Enum.Font.GothamMedium
-    tabBtn.TextSize = 13
+    tabBtn.TextSize = 12
     tabBtn.TextXAlignment = Enum.TextXAlignment.Left
     tabBtn.ZIndex = 503
     tabBtn.Parent = TabContainer
     
     local pad = Instance.new("UIPadding")
-    pad.PaddingLeft = UDim.new(0, 10)
+    pad.PaddingLeft = UDim.new(0, 8)
     pad.Parent = tabBtn
     
     local tabCorner = Instance.new("UICorner")
@@ -631,7 +647,7 @@ local function CreateTab(name, icon)
     tabCorner.Parent = tabBtn
     
     local page = Instance.new("ScrollingFrame")
-    page.Size = UDim2.new(1, -8, 1, 0)
+    page.Size = UDim2.new(1, -6, 1, 0)
     page.BackgroundTransparency = 1
     page.ScrollBarThickness = 4
     page.ScrollBarImageColor3 = Color3.fromRGB(0, 200, 255)
@@ -642,7 +658,7 @@ local function CreateTab(name, icon)
     local pageLayout = Instance.new("UIListLayout")
     pageLayout.Parent = page
     pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    pageLayout.Padding = UDim.new(0, 8)
+    pageLayout.Padding = UDim.new(0, 6)
     
     tabBtn.MouseButton1Click:Connect(function()
         for _, p in pairs(Pages) do p.Visible = false end
@@ -669,7 +685,7 @@ end
 -- 6. INTERACTIVE UI COMPONENTS
 local function AddSection(parent, title)
     local sec = Instance.new("Frame")
-    sec.Size = UDim2.new(1, -10, 0, 28)
+    sec.Size = UDim2.new(1, -8, 0, 24)
     sec.BackgroundTransparency = 1
     sec.ZIndex = 503
     sec.Parent = parent
@@ -680,20 +696,20 @@ local function AddSection(parent, title)
     lbl.Text = "─── " .. title:upper() .. " ───"
     lbl.TextColor3 = Color3.fromRGB(0, 200, 255)
     lbl.Font = Enum.Font.GothamBold
-    lbl.TextSize = 12
+    lbl.TextSize = 11
     lbl.ZIndex = 504
     lbl.Parent = sec
 end
 
 local function AddToggle(parent, text, default, callback)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, -10, 0, 40)
+    frame.Size = UDim2.new(1, -8, 0, 36)
     frame.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
     frame.ZIndex = 503
     frame.Parent = parent
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
+    corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = frame
     
     local stroke = Instance.new("UIStroke")
@@ -702,30 +718,30 @@ local function AddToggle(parent, text, default, callback)
     stroke.Parent = frame
     
     local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -75, 1, 0)
-    lbl.Position = UDim2.new(0, 12, 0, 0)
+    lbl.Size = UDim2.new(1, -65, 1, 0)
+    lbl.Position = UDim2.new(0, 10, 0, 0)
     lbl.BackgroundTransparency = 1
     lbl.Text = text
     lbl.TextColor3 = Color3.fromRGB(240, 245, 255)
     lbl.Font = Enum.Font.GothamMedium
-    lbl.TextSize = 13
+    lbl.TextSize = 12
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.ZIndex = 504
     lbl.Parent = frame
     
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 52, 0, 26)
-    btn.Position = UDim2.new(1, -62, 0.5, -13)
+    btn.Size = UDim2.new(0, 46, 0, 22)
+    btn.Position = UDim2.new(1, -54, 0.5, -11)
     btn.BackgroundColor3 = default and Color3.fromRGB(0, 210, 120) or Color3.fromRGB(50, 58, 76)
     btn.Text = default and "ON" or "OFF"
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 12
+    btn.TextSize = 11
     btn.ZIndex = 504
     btn.Parent = frame
     
     local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.CornerRadius = UDim.new(0, 5)
     btnCorner.Parent = btn
     
     local state = default
@@ -740,17 +756,17 @@ end
 
 local function AddButton(parent, text, callback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -10, 0, 38)
+    btn.Size = UDim2.new(1, -8, 0, 34)
     btn.BackgroundColor3 = Color3.fromRGB(0, 135, 240)
     btn.Text = text
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 13
+    btn.TextSize = 12
     btn.ZIndex = 503
     btn.Parent = parent
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
+    corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
     
     btn.MouseButton1Click:Connect(callback)
@@ -758,13 +774,13 @@ end
 
 local function AddSlider(parent, text, min, max, default, callback)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, -10, 0, 48)
+    frame.Size = UDim2.new(1, -8, 0, 44)
     frame.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
     frame.ZIndex = 503
     frame.Parent = parent
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
+    corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = frame
     
     local stroke = Instance.new("UIStroke")
@@ -773,20 +789,20 @@ local function AddSlider(parent, text, min, max, default, callback)
     stroke.Parent = frame
     
     local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -10, 0, 20)
-    lbl.Position = UDim2.new(0, 12, 0, 3)
+    lbl.Size = UDim2.new(1, -10, 0, 18)
+    lbl.Position = UDim2.new(0, 10, 0, 2)
     lbl.BackgroundTransparency = 1
     lbl.Text = text .. ": " .. tostring(default)
     lbl.TextColor3 = Color3.fromRGB(240, 245, 255)
     lbl.Font = Enum.Font.GothamMedium
-    lbl.TextSize = 13
+    lbl.TextSize = 12
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.ZIndex = 504
     lbl.Parent = frame
     
     local sliderBg = Instance.new("TextButton")
-    sliderBg.Size = UDim2.new(1, -24, 0, 10)
-    sliderBg.Position = UDim2.new(0, 12, 0, 28)
+    sliderBg.Size = UDim2.new(1, -20, 0, 8)
+    sliderBg.Position = UDim2.new(0, 10, 0, 26)
     sliderBg.BackgroundColor3 = Color3.fromRGB(45, 52, 70)
     sliderBg.Text = ""
     sliderBg.ZIndex = 504
@@ -839,13 +855,13 @@ end
 
 local function AddDropdown(parent, text, options, callback)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, -10, 0, 40)
+    frame.Size = UDim2.new(1, -8, 0, 36)
     frame.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
     frame.ZIndex = 503
     frame.Parent = parent
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
+    corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = frame
     
     local stroke = Instance.new("UIStroke")
@@ -855,30 +871,30 @@ local function AddDropdown(parent, text, options, callback)
     
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(0.42, 0, 1, 0)
-    lbl.Position = UDim2.new(0, 12, 0, 0)
+    lbl.Position = UDim2.new(0, 10, 0, 0)
     lbl.BackgroundTransparency = 1
     lbl.Text = text
     lbl.TextColor3 = Color3.fromRGB(240, 245, 255)
     lbl.Font = Enum.Font.GothamMedium
-    lbl.TextSize = 13
+    lbl.TextSize = 12
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.ZIndex = 504
     lbl.Parent = frame
     
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.54, -10, 0, 28)
-    btn.Position = UDim2.new(0.46, 0, 0.5, -14)
+    btn.Size = UDim2.new(0.54, -8, 0, 24)
+    btn.Position = UDim2.new(0.46, 0, 0.5, -12)
     btn.BackgroundColor3 = Color3.fromRGB(32, 38, 54)
     btn.Text = options[1] or "Select"
     btn.TextColor3 = Color3.fromRGB(0, 220, 255)
     btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 12
+    btn.TextSize = 11
     btn.TextTruncate = Enum.TextTruncate.AtEnd
     btn.ZIndex = 504
     btn.Parent = frame
     
     local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.CornerRadius = UDim.new(0, 5)
     btnCorner.Parent = btn
     
     local currentIndex = 1
@@ -916,7 +932,7 @@ local function GetHumanoid()
     return nil
 end
 
--- 1. GRAVITY LOCK & HOVER ENGINE (CHỐNG RƠI XUỐNG BẦY QUÁI)
+-- 1. GRAVITY LOCK & HOVER ENGINE
 local FarmBodyVel = nil
 local FarmBodyGyro = nil
 
@@ -929,7 +945,7 @@ local function EnableGravityLock(targetCFrame)
         FarmBodyVel = Instance.new("BodyVelocity")
         FarmBodyVel.Name = "BF_Hub_GravityLock_Vel"
         FarmBodyVel.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-        FarmBodyVel.Velocity = Vector3.zero
+        FarmBodyVel.Velocity = Vector3.new(0, 0, 0)
         FarmBodyVel.Parent = root
     end
     
@@ -1015,7 +1031,7 @@ local function BringAndFreezeMobs(targetCenterCF)
             if dist <= Config.BringRadius then
                 mob.HumanoidRootPart.CFrame = targetCenterCF * CFrame.new(0, 0, -1)
                 mob.HumanoidRootPart.CanCollide = false
-                mob.HumanoidRootPart.Velocity = Vector3.zero
+                mob.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
                 mob.Humanoid.WalkSpeed = 0
                 mob.Humanoid.PlatformStand = true
             end
@@ -1023,12 +1039,12 @@ local function BringAndFreezeMobs(targetCenterCF)
     end
 end
 
--- 4. FAST ATTACK V3 (TRANG BỊ VŨ KHÍ + ACTIVATE TOOL + CLICKER)
+-- 4. FAST ATTACK V3
 local function EquipSelectedWeapon()
     local char = GetCharacter()
     if not char then return end
     local hum = GetHumanoid()
-    local backpack = LocalPlayer.Backpack
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
     local targetType = Config.SelectedWeapon
     
     for _, tool in pairs(char:GetChildren()) do
@@ -1042,14 +1058,16 @@ local function EquipSelectedWeapon()
         end
     end
     
-    for _, tool in pairs(backpack:GetChildren()) do
-        if tool:IsA("Tool") then
-            if (targetType == "Melee" and tool.ToolTip == "Melee") or
-               (targetType == "Sword" and tool.ToolTip == "Sword") or
-               (targetType == "Blox Fruit" and tool.ToolTip == "Blox Fruit") or
-               (targetType == "Gun" and tool.ToolTip == "Gun") then
-                if hum then hum:EquipTool(tool) end
-                return tool
+    if backpack then
+        for _, tool in pairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                if (targetType == "Melee" and tool.ToolTip == "Melee") or
+                   (targetType == "Sword" and tool.ToolTip == "Sword") or
+                   (targetType == "Blox Fruit" and tool.ToolTip == "Blox Fruit") or
+                   (targetType == "Gun" and tool.ToolTip == "Gun") then
+                    if hum then hum:EquipTool(tool) end
+                    return tool
+                end
             end
         end
     end
@@ -1127,7 +1145,6 @@ task.spawn(function()
                         end
                         
                         if targetMob then
-                            -- GIỮ ĐỘ CAO AN TOÀN 13.5 STUDS TRÊN ĐẦU QUÁI CHỐNG BỊ ĐÁNH
                             local safeFarmCF = targetMob.HumanoidRootPart.CFrame * CFrame.new(0, Config.FarmHeight, Config.FarmDistance) * CFrame.Angles(math.rad(-90), 0, 0)
                             EnableGravityLock(safeFarmCF)
                             root.CFrame = safeFarmCF
@@ -1290,7 +1307,7 @@ local function StartFly()
     
     flyBodyVel = Instance.new("BodyVelocity")
     flyBodyVel.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-    flyBodyVel.Velocity = Vector3.zero
+    flyBodyVel.Velocity = Vector3.new(0, 0, 0)
     flyBodyVel.Parent = root
     
     flyBodyGyro = Instance.new("BodyGyro")
@@ -1300,7 +1317,7 @@ local function StartFly()
     
     task.spawn(function()
         while Config.Fly and flyBodyVel and flyBodyGyro do
-            local moveDir = Vector3.zero
+            local moveDir = Vector3.new(0, 0, 0)
             local camCF = Camera.CFrame
             
             if flyKeys.W then moveDir = moveDir + camCF.LookVector end
@@ -1554,7 +1571,7 @@ local function ApplyUltraFixLag()
     end)
 end
 
--- 8. Black Screen Mode (Treo đêm tiết kiệm 85% Pin & CPU)
+-- 8. Black Screen Mode
 local BlackScreenFrame = nil
 
 local function ToggleBlackScreen(state)
@@ -1622,7 +1639,7 @@ AddToggle(TabFarm, "🌾 Auto Farm Level (Lv 1 -> 2550)", Config.AutoFarmLevel, 
 AddSection(TabFarm, "Farm Theo Mục Tiêu Tuỳ Chọn")
 local mobNames = {}
 for _, q in ipairs(QuestData) do
-    if not table.find(mobNames, q.Mob) then table.insert(mobNames, q.Mob) end
+    if not TableFind(mobNames, q.Mob) then table.insert(mobNames, q.Mob) end
 end
 AddDropdown(TabFarm, "Chọn Bãi Quái:", mobNames, function(v) Config.SelectedMob = v end)
 AddToggle(TabFarm, "🎯 Auto Farm Quái Bãi Đã Chọn", Config.AutoFarmSelectedMob, function(v) Config.AutoFarmSelectedMob = v end)
@@ -1780,8 +1797,8 @@ AddButton(TabSettings, "💾 Lưu Cài Đặt (Save Config)", function()
     Notify("Config Manager", "Đã lưu cài đặt cấu hình thành công!", 3)
 end)
 
-Notify("🔥 BLOX FRUITS TITAN HUB V6.1", "Giao diện Redz Edition đã tải thành công!", 5)
-print("★ BLOX FRUITS TITAN HUB V6.1 (REDZ / FLUENT EDITION) LOADED SUCCESSFULLY ★")
+Notify("🔥 BLOX FRUITS TITAN HUB V6.2", "Giao diện Redz Edition đã tải thành công!", 5)
+print("★ BLOX FRUITS TITAN HUB V6.2 (REDZ / FLUENT EDITION) LOADED SUCCESSFULLY ★")
 
 
 -- ===================================================================================
