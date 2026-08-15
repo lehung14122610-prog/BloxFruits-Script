@@ -1,4 +1,4 @@
--- [ CORE: NETWORK.LUA - BULLETPROOF WEAPON & ATTACK ENGINE V8.1 ]
+-- [ CORE: NETWORK.LUA - BULLETPROOF WEAPON & ATTACK ENGINE V8.2 ]
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualUser = game:GetService("VirtualUser")
@@ -70,7 +70,6 @@ local function IsToolMatch(tool, targetType)
         for _, mName in ipairs(MeleeNames) do
             if name:find(mName) then return true end
         end
-        -- Nếu không phải Sword, Gun hay Fruit thì mặc định là Melee
         if tip ~= "Sword" and tip ~= "Gun" and tip ~= "Blox Fruit" and not name:find("Fruit") then
             return true
         end
@@ -84,20 +83,20 @@ local function IsToolMatch(tool, targetType)
     return false
 end
 
-function Network.EquipWeapon(targetType)
+-- TRANG BỊ VŨ KHÍ ỔN ĐỊNH: Chỉ đổi khi chưa cầm đúng loại, không equip liên tục trong vòng lặp
+function Network.EnsureWeaponEquipped(targetType)
     local char = Network.GetCharacter()
     local hum = Network.GetHumanoid()
     local backpack = LocalPlayer:FindFirstChild("Backpack")
     if not char or not hum then return nil end
     
-    -- 1. Kiểm tra tool đang cầm trên tay
-    for _, tool in pairs(char:GetChildren()) do
-        if tool:IsA("Tool") and IsToolMatch(tool, targetType) then
-            return tool
-        end
+    -- Nếu đang cầm sẵn tool đúng loại, giữ nguyên
+    local currentTool = char:FindFirstChildOfClass("Tool")
+    if currentTool and IsToolMatch(currentTool, targetType) then
+        return currentTool
     end
     
-    -- 2. Kiểm tra trong Backpack
+    -- Tìm trong Backpack
     if backpack then
         for _, tool in pairs(backpack:GetChildren()) do
             if tool:IsA("Tool") and IsToolMatch(tool, targetType) then
@@ -105,38 +104,39 @@ function Network.EquipWeapon(targetType)
                 return tool
             end
         end
-        -- Fallback: Nếu không tìm thấy loại khớp, trang bị tool đầu tiên trong túi
-        local firstTool = backpack:FindFirstChildOfClass("Tool")
-        if firstTool then
-            hum:EquipTool(firstTool)
-            return firstTool
+        -- Fallback nếu chưa cầm gì: cầm vũ khí đầu tiên
+        if not currentTool then
+            local firstTool = backpack:FindFirstChildOfClass("Tool")
+            if firstTool then
+                hum:EquipTool(firstTool)
+                return firstTool
+            end
         end
     end
     
-    return char:FindFirstChildOfClass("Tool")
+    return currentTool
 end
 
--- THI HÀNH ĐÒN ĐÁNH SIÊU TỐC VỚI ĐẦY ĐỦ 4 LỚP SÁT THƯƠNG
+-- THI HÀNH ĐÒN ĐÁNH (GỠ BỎ CAPTURECONTROLLER ĐỂ KHÔNG KẸT CHUỘT)
 function Network.ExecuteFastAttack(targetWeaponType, targetMob)
     pcall(function()
-        local tool = Network.EquipWeapon(targetWeaponType or "Melee")
+        local tool = Network.EnsureWeaponEquipped(targetWeaponType or "Melee")
         if tool then
             tool:Activate()
         end
         
-        -- Lớp 1: VirtualUser Click trực tiếp
-        VirtualUser:CaptureController()
-        VirtualUser:Button1Down(Vector2.new(0, 0), Camera.CFrame)
-        VirtualUser:Button1Up(Vector2.new(0, 0), Camera.CFrame)
+        -- Kích hoạt Click ảo nhẹ
+        VirtualUser:Button1Down(Vector2.new(0.5, 0.5))
+        VirtualUser:Button1Up(Vector2.new(0.5, 0.5))
         
-        -- Lớp 2: Kích hoạt Remote Blox Fruits Net
+        -- Gửi Remote sát thương Blox Fruits
         local net = ReplicatedStorage:FindFirstChild("Modules") and ReplicatedStorage.Modules:FindFirstChild("Net")
         if net then
             if net:FindFirstChild("RegisterAttack") then
                 net.RegisterAttack:FireServer(0)
             end
             if targetMob and targetMob:FindFirstChild("HumanoidRootPart") and net:FindFirstChild("RegisterHit") then
-                net.RegisterHit:FireServer(targetMob.HumanoidRootPart, {})
+                net.RegisterHit:FireServer(targetMob.HumanoidRootPart, { {targetMob, targetMob.HumanoidRootPart} })
             end
         end
     end)

@@ -1,6 +1,6 @@
 --[[
     ===================================================================================
-    ★ BLOX FRUITS ULTIMATE HUB V8.1 (TRUE FLIGHT & COMBAT ENGINE) ★
+    ★ BLOX FRUITS ULTIMATE HUB V8.2 (MOUSE & COMBAT STABILIZATION) ★
     Tác giả: lehung14122610-prog
     Repository: https://github.com/lehung14122610-prog/BloxFruits-Script
     Hỗ trợ 100%: DeltaX, Delta, Solara, Wave, Arceus X, Codex (PC, Android & BlueStacks)
@@ -34,7 +34,7 @@ end
 -- Thông báo nạp
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ Titan Hub v8.1",
+        Title = "⚡ Titan Hub v8.2",
         Text = "Đang nạp hệ thống Auto Farm...",
         Duration = 3
     })
@@ -50,7 +50,7 @@ getgenv().BF_Hub_Config = {
     SelectedMob = "",
     SelectedBoss = "",
     SelectedWeapon = "Melee",
-    FarmHeight = 12.0,
+    FarmHeight = 11.0,
     FarmDistance = 0.0,
     FastAttack = true,
     BringMobs = true,
@@ -138,7 +138,7 @@ local TabSettings = UI.CreateTab("System", "⚙️")
 -- 4. TAB: MAIN FARM
 UI.AddSection(TabFarm, "Cài Đặt Auto Farm Level (1 -> 2800)")
 UI.AddDropdown(TabFarm, "Vũ Khí Farm:", {"Melee", "Sword", "Blox Fruit", "Gun"}, function(v) Config.SelectedWeapon = v SaveConfig() end)
-UI.AddSlider(TabFarm, "Độ Cao Farm Trên Đầu Quái (Studs)", 6, 20, Config.FarmHeight, function(v) Config.FarmHeight = v SaveConfig() end)
+UI.AddSlider(TabFarm, "Độ Cao Farm Trên Đầu Quái (Studs)", 6, 18, Config.FarmHeight, function(v) Config.FarmHeight = v SaveConfig() end)
 UI.AddToggle(TabFarm, "🌾 Auto Farm Level (1 -> 2800 Max)", Config.AutoFarmLevel, function(v) Config.AutoFarmLevel = v SaveConfig() end)
 
 UI.AddSection(TabFarm, "Farm Quái & Boss Tuỳ Chọn")
@@ -210,7 +210,7 @@ UI.AddToggle(TabSettings, "💤 Anti-AFK (Chống Văng Game)", Config.AntiAFK, 
 UI.AddButton(TabSettings, "🔄 Rejoin Current Server", function() if Utils then Utils.RejoinServer() end end)
 UI.AddButton(TabSettings, "🌐 Server Hop (Tìm Server Ít Người)", function() if Utils then Utils.ServerHop() end end)
 
--- 8. TIẾN TRÌNH AUTO FARM STATE MACHINE CHUẨN V8.1
+-- 8. TIẾN TRÌNH AUTO FARM STATE MACHINE CHUẨN V8.2
 local function GetQuestForCurrentLevel()
     local level = Network.GetPlayerLevelSafe()
     for _, q in ipairs(QuestsData) do
@@ -244,7 +244,7 @@ local function BringAndFreezeMobs(targetCenterCF)
     end
 end
 
--- MASTER AUTO FARM LOOP (SMOOTH HORIZONTAL TWEEN + LOCAL HOVER ATTACK)
+-- MASTER AUTO FARM LOOP (SMOOTH HORIZONTAL TWEEN + AIM-AT-MOB HOVER ATTACK)
 task.spawn(function()
     while task.wait(0.08) do
         local root = Network.GetRoot()
@@ -273,24 +273,22 @@ task.spawn(function()
                             end
                         end
                         
-                        if targetMob then
+                        if targetMob and targetMob:FindFirstChild("HumanoidRootPart") then
                             local mobPos = targetMob.HumanoidRootPart.Position
                             local distToMob = (root.Position - mobPos).Magnitude
-                            local hoverTargetCF = targetMob.HumanoidRootPart.CFrame * CFrame.new(0, Config.FarmHeight, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+                            local targetFarmPos = mobPos + Vector3.new(0, Config.FarmHeight, 0)
+                            local hoverTargetCF = CFrame.lookAt(targetFarmPos, mobPos)
                             
-                            -- Nếu đang ở xa quái (> 20 studs): TWEEN NGANG TRỰC TIẾP ĐẾN QUÁI
-                            if distToMob > 20 then
+                            if distToMob > 25 then
                                 Movement.DisableHoverLock()
                                 Movement.TweenTo(hoverTargetCF)
                             else
-                                -- Đã đến ngay trên đầu quái (<= 20 studs): KHOÁ VỊ TRÍ TRÊN KHÔNG VÀ TẤN CÔNG
                                 Movement.StopTween()
                                 Movement.EnableHoverLock(hoverTargetCF)
                                 BringAndFreezeMobs(targetMob.HumanoidRootPart.CFrame)
                                 Network.ExecuteFastAttack(Config.SelectedWeapon, targetMob)
                             end
                         else
-                            -- Nếu chưa spawn quái, bay ngang đến toạ độ bãi quái
                             Movement.DisableHoverLock()
                             Movement.TweenTo(quest.MobCFrame * CFrame.new(0, Config.FarmHeight, 0))
                         end
@@ -307,12 +305,13 @@ task.spawn(function()
                         end
                     end
                 end
-                if targetMob then
+                if targetMob and targetMob:FindFirstChild("HumanoidRootPart") then
                     local mobPos = targetMob.HumanoidRootPart.Position
                     local distToMob = (root.Position - mobPos).Magnitude
-                    local hoverTargetCF = targetMob.HumanoidRootPart.CFrame * CFrame.new(0, Config.FarmHeight, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+                    local targetFarmPos = mobPos + Vector3.new(0, Config.FarmHeight, 0)
+                    local hoverTargetCF = CFrame.lookAt(targetFarmPos, mobPos)
                     
-                    if distToMob > 20 then
+                    if distToMob > 25 then
                         Movement.DisableHoverLock()
                         Movement.TweenTo(hoverTargetCF)
                     else
@@ -335,12 +334,13 @@ task.spawn(function()
                         end
                     end
                 end
-                if targetBoss then
+                if targetBoss and targetBoss:FindFirstChild("HumanoidRootPart") then
                     local mobPos = targetBoss.HumanoidRootPart.Position
                     local distToBoss = (root.Position - mobPos).Magnitude
-                    local hoverTargetCF = targetBoss.HumanoidRootPart.CFrame * CFrame.new(0, Config.FarmHeight, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+                    local targetFarmPos = mobPos + Vector3.new(0, Config.FarmHeight, 0)
+                    local hoverTargetCF = CFrame.lookAt(targetFarmPos, mobPos)
                     
-                    if distToBoss > 20 then
+                    if distToBoss > 25 then
                         Movement.DisableHoverLock()
                         Movement.TweenTo(hoverTargetCF)
                     else
@@ -362,7 +362,7 @@ task.spawn(function()
     end
 end)
 
--- 9. SỬA LỖI AUTO FARM RƯƠNG (CHEST FARM)
+-- 9. AUTO FARM RƯƠNG (CHEST FARM)
 task.spawn(function()
     while task.wait(0.2) do
         if Config.AutoFarmChest then
@@ -425,9 +425,9 @@ if ESPMod and ESPMod.Init then ESPMod.Init(UI, TabESP, TabFruit, Config, Network
 
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "🔥 TITAN HUB V8.1",
-        Text = "Auto Farm & Combat Engine sẵn sàng!",
+        Title = "🔥 TITAN HUB V8.2",
+        Text = "Hệ thống Farm & Chuột đã tối ưu 100%!",
         Duration = 5
     })
 end)
-print("★ BLOX FRUITS TITAN HUB V8.1 (TRUE FLIGHT & COMBAT ENGINE) LOADED ★")
+print("★ BLOX FRUITS TITAN HUB V8.2 (MOUSE & COMBAT STABILIZATION) LOADED ★")
