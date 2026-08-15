@@ -1,4 +1,4 @@
--- [ CORE: MOVEMENT.LUA - STATE-MACHINE TWEEN, HOVER LOCK & FLY V2 ]
+-- [ CORE: MOVEMENT.LUA - DIRECT HORIZONTAL TWEEN & LOCAL HOVER V8.1 ]
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
@@ -21,13 +21,12 @@ local function GetHumanoid()
     return LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 end
 
--- 1. HOVER LOCK CHỐNG RUNG LẮC TUYỆT ĐỐI (STATE-MACHINE HOVER)
+-- 1. HOVER LOCK CHỈ KÍCH HOẠT KHI ĐÃ ĐẾN GẦN QUÁI (DƯỚI 20 STUDS)
 function Movement.EnableHoverLock(targetCFrame)
     local root = GetRoot()
     local hum = GetHumanoid()
     if not root or not hum then return end
     
-    -- Ngắt toàn bộ quán tính rơi để không giật
     root.Velocity = Vector3.new(0, 0, 0)
     root.RotVelocity = Vector3.new(0, 0, 0)
     hum.PlatformStand = true
@@ -36,8 +35,8 @@ function Movement.EnableHoverLock(targetCFrame)
         if HoverBodyPos then HoverBodyPos:Destroy() end
         HoverBodyPos = Instance.new("BodyPosition")
         HoverBodyPos.Name = "BF_Titan_HoverPos"
-        HoverBodyPos.P = 50000
-        HoverBodyPos.D = 1000
+        HoverBodyPos.P = 40000
+        HoverBodyPos.D = 800
         HoverBodyPos.MaxForce = Vector3.new(1e9, 1e9, 1e9)
         HoverBodyPos.Position = targetCFrame.Position
         HoverBodyPos.Parent = root
@@ -49,8 +48,8 @@ function Movement.EnableHoverLock(targetCFrame)
         if HoverBodyGyro then HoverBodyGyro:Destroy() end
         HoverBodyGyro = Instance.new("BodyGyro")
         HoverBodyGyro.Name = "BF_Titan_HoverGyro"
-        HoverBodyGyro.P = 50000
-        HoverBodyGyro.D = 1000
+        HoverBodyGyro.P = 40000
+        HoverBodyGyro.D = 800
         HoverBodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
         HoverBodyGyro.CFrame = targetCFrame
         HoverBodyGyro.Parent = root
@@ -68,7 +67,7 @@ function Movement.DisableHoverLock()
     end
 end
 
--- 2. TWEEN ENGINE AN TOÀN TRÁNH BẪY ANTI-CHEAT
+-- 2. TWEEN ENGINE DI CHUYỂN NGANG TRỰC TIẾP (KHÔNG BAY VỌT LÊN TRỜI)
 function Movement.StopTween()
     if ActiveTween then
         ActiveTween:Cancel()
@@ -81,7 +80,6 @@ function Movement.TweenTo(targetCFrame, customSpeed)
     local hum = GetHumanoid()
     if not root then return end
     
-    -- Khi bắt đầu di chuyển, tắt HoverLock để không xung đột vật lý
     Movement.DisableHoverLock()
     if hum then hum.PlatformStand = true end
     root.Velocity = Vector3.new(0, 0, 0)
@@ -103,6 +101,7 @@ function Movement.TweenTo(targetCFrame, customSpeed)
     return ActiveTween
 end
 
+-- Sửa SafeWayPointTween: Bay mượt qua biển ở độ cao an toàn vừa phải (+45 studs), KHÔNG bay lên 950 studs
 function Movement.SafeWayPointTween(targetCFrame)
     local root = GetRoot()
     if not root then return end
@@ -111,24 +110,21 @@ function Movement.SafeWayPointTween(targetCFrame)
     local targetPos = targetCFrame.Position
     local dist = (currentPos - targetPos).Magnitude
     
-    if dist > 800 then
-        local highPos1 = Vector3.new(currentPos.X, 950, currentPos.Z)
-        local highPos2 = Vector3.new(targetPos.X, 950, targetPos.Z)
+    if dist > 600 then
+        local safeY = math.max(currentPos.Y, targetPos.Y, 50) + 40
+        local midPos = Vector3.new((currentPos.X + targetPos.X) / 2, safeY, (currentPos.Z + targetPos.Z) / 2)
         
-        local tw1 = Movement.TweenTo(CFrame.new(highPos1))
+        local tw1 = Movement.TweenTo(CFrame.new(midPos))
         if tw1 then tw1.Completed:Wait() end
         
-        local tw2 = Movement.TweenTo(CFrame.new(highPos2))
+        local tw2 = Movement.TweenTo(targetCFrame)
         if tw2 then tw2.Completed:Wait() end
-        
-        local tw3 = Movement.TweenTo(targetCFrame)
-        if tw3 then tw3.Completed:Wait() end
     else
         Movement.TweenTo(targetCFrame)
     end
 end
 
--- 3. FLY V2 ENGINE - MƯỢT TUYỆT ĐỐI, KHÔNG VĂNG KHI HẠ CÁNH
+-- 3. FLY V2 ENGINE - DI CHUYỂN BẰNG PHÍM / JOYSTICK SIÊU MƯỢT
 function Movement.StartFly(speed)
     local root = GetRoot()
     local hum = GetHumanoid()
@@ -149,8 +145,8 @@ function Movement.StartFly(speed)
     
     flyBodyGyro = Instance.new("BodyGyro")
     flyBodyGyro.Name = "BF_Titan_FlyGyro"
-    flyBodyGyro.P = 50000
-    flyBodyGyro.D = 1000
+    flyBodyGyro.P = 40000
+    flyBodyGyro.D = 800
     flyBodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
     flyBodyGyro.CFrame = root.CFrame
     flyBodyGyro.Parent = root
@@ -216,7 +212,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- 5. WATER WALK THREAD
+-- 5. WATER WALK
 local WaterPlatform = Instance.new("Part")
 WaterPlatform.Name = "BF_Hub_WaterPlatform_Titan"
 WaterPlatform.Size = Vector3.new(600, 1, 600)
