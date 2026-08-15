@@ -1591,9 +1591,7 @@ local function ToggleBlackScreen(state)
             local txt = Instance.new("TextLabel")
             txt.Parent = BlackScreenFrame
             txt.Size = UDim2.new(1, 0, 1, 0)
-            txt.Text = "🌙 ULTRA BLACK SCREEN MODE (TREO ĐÊM TIẾT KIỆM PIN & FPS)
-
-Nhấp nút Icon Nổi Mobile (🔥) để mở lại giao diện."
+            txt.Text = "ULTRA BLACK SCREEN MODE - Nhap Icon Noi (🔥) de mo lai giao dien"
             txt.TextColor3 = Color3.fromRGB(0, 255, 170)
             txt.Font = Enum.Font.GothamBold
             txt.TextSize = 22
