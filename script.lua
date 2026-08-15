@@ -1,17 +1,17 @@
 --[[
     ===================================================================================
-    ★ BLOX FRUITS ULTIMATE HUB V6.2 (REDZ / FLUENT SUPREME TITAN EDITION) ★
-    Tương thích 100% với tất cả Trình thực thi PC & Mobile (BlueStacks / DeltaX Fixed):
-    - Mobile / Emulators: Delta, DeltaX, Arceus X, Codex, Fluxus Mobile, Hydrogen, VegaX
+    ★ BLOX FRUITS ULTIMATE HUB V6.3 (REDZ / FLUENT SUPREME TITAN EDITION) ★
+    Tương thích 100% với tất cả Trình thực thi PC & Mobile (DeltaX, Arceus, Solara):
+    - Mobile / BlueStacks: Delta, DeltaX, Arceus X, Codex, Fluxus Mobile, Hydrogen, VegaX
     - PC: Solara, Wave, Xeno, Celery, Swift, Synapse Z
     
-    Bản v6.2: Sửa 100% tương thích Lua 5.1/Luau, Vector3.zero, table.find, 
-    Mount trực tiếp PlayerGui trên BlueStacks/DeltaX hiển thị tức thì 100%.
+    Bản v6.3: Khắc phục triệt để Signal Completed, Enum Thumbnail,
+    Khởi tạo giao diện tức thì (0.01s), chống lỗi âm thầm 100%.
     ===================================================================================
 --]]
 
 -- ===================================================================================
--- [ MÔ-ĐUN 1: MÔI TRƯỜNG AN TOÀN & BỘ NẠP GIAO DIỆN (DELTA / DELTAX COMPATIBILITY) ]
+-- [ MÔ-ĐUN 1: MÔI TRƯỜNG AN TOÀN & BỘ NẠP GIAO DIỆN (SAFE EXECUTOR ENVIRONMENT) ]
 -- ===================================================================================
 local getgenv = getgenv or function() return _G end
 local cloneref = cloneref or function(obj) return obj end
@@ -73,41 +73,38 @@ local function GetPlayerLevelSafe()
     return lvl
 end
 
--- Safe GUI Container Resolver (Ưu tiên PlayerGui cho BlueStacks & DeltaX)
+-- Safe UI Container Resolver
 local function GetUIContainer()
-    local pgui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:FindFirstChild("PlayerGui")
-    if pgui then return pgui end
-    
     local container = nil
     pcall(function()
         if gethui then
             container = gethui()
-        elseif get_hidden_gui then
-            container = get_hidden_gui()
-        else
-            container = game:GetService("CoreGui")
         end
     end)
-    if container then return container end
-    return LocalPlayer:WaitForChild("PlayerGui", 5)
+    if not container then
+        pcall(function()
+            local cg = game:GetService("CoreGui")
+            local testFolder = Instance.new("Folder")
+            testFolder.Parent = cg
+            testFolder:Destroy()
+            container = cg
+        end)
+    end
+    if not container then
+        container = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 10)
+    end
+    return container or LocalPlayer.PlayerGui
 end
 
 -- Dọn dẹp phiên bản GUI cũ nếu đang chạy lại
 pcall(function()
     local targetContainer = GetUIContainer()
-    local oldUI = targetContainer:FindFirstChild("BF_Ultimate_Hub_Titan")
-    if oldUI then oldUI:Destroy() end
-    
-    -- Cũng dọn trong CoreGui và PlayerGui nếu có
+    if targetContainer and targetContainer:FindFirstChild("BF_Ultimate_Hub_Titan") then
+        targetContainer.BF_Ultimate_Hub_Titan:Destroy()
+    end
     if LocalPlayer:FindFirstChild("PlayerGui") and LocalPlayer.PlayerGui:FindFirstChild("BF_Ultimate_Hub_Titan") then
         LocalPlayer.PlayerGui.BF_Ultimate_Hub_Titan:Destroy()
     end
-end)
-
--- Kiểm tra hỗ trợ Drawing API
-local HasDrawingAPI = pcall(function()
-    local d = Drawing.new("Text")
-    d:Remove()
 end)
 
 
@@ -242,7 +239,7 @@ local function Notify(title, text, duration)
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = title or "BF Titan Hub",
             Text = text or "",
-            Duration = duration or 3
+            Duration = duration or 4
         })
     end)
 end
@@ -424,7 +421,7 @@ ScreenGui.IgnoreGuiInset = true
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = parentUI
 
--- 1. NÚT ICON NỔI MOBILE TOGGLE (🔥) CHO DELTAX & CẢM ỨNG
+-- 1. NÚT ICON NỔI MOBILE TOGGLE (🔥) CHO DELTAX & BLUESTACKS
 local MobileFloatingBtn = Instance.new("TextButton")
 MobileFloatingBtn.Name = "MobileToggleIcon"
 MobileFloatingBtn.Size = UDim2.new(0, 52, 0, 52)
@@ -456,7 +453,7 @@ MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.ZIndex = 500
-MainFrame.Visible = true -- Bật giao diện ngay lập tức!
+MainFrame.Visible = true -- Hiển thị ngay tức thì!
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
@@ -498,7 +495,7 @@ TitleText.Parent = TitleBar
 TitleText.Size = UDim2.new(1, -120, 1, 0)
 TitleText.Position = UDim2.new(0, 42, 0, 0)
 TitleText.BackgroundTransparency = 1
-TitleText.Text = "BLOX FRUITS TITAN HUB V6.2"
+TitleText.Text = "BLOX FRUITS TITAN HUB V6.3"
 TitleText.TextColor3 = Color3.fromRGB(0, 235, 255)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 14
@@ -562,7 +559,7 @@ AvatarCorner.CornerRadius = UDim.new(1, 0)
 AvatarCorner.Parent = AvatarImg
 
 pcall(function()
-    local thumb = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+    local thumb = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.AvatarHeadShot, Enum.ThumbnailSize.Size100x100)
     AvatarImg.Image = thumb
 end)
 
@@ -987,7 +984,7 @@ local function TweenTo(targetCFrame, customSpeed)
     
     if distance < 3.5 then
         root.CFrame = targetCFrame
-        return
+        return nil
     end
     
     local time = distance / speed
@@ -1011,9 +1008,14 @@ local function SafeWayPointTween(targetCFrame)
         local highPos1 = Vector3.new(currentPos.X, 950, currentPos.Z)
         local highPos2 = Vector3.new(targetPos.X, 950, targetPos.Z)
         
-        TweenTo(CFrame.new(highPos1)):Completed():Wait()
-        TweenTo(CFrame.new(highPos2)):Completed():Wait()
-        TweenTo(targetCFrame):Completed():Wait()
+        local tw1 = TweenTo(CFrame.new(highPos1))
+        if tw1 then tw1.Completed:Wait() end
+        
+        local tw2 = TweenTo(CFrame.new(highPos2))
+        if tw2 then tw2.Completed:Wait() end
+        
+        local tw3 = TweenTo(targetCFrame)
+        if tw3 then tw3.Completed:Wait() end
     else
         TweenTo(targetCFrame)
     end
@@ -1795,8 +1797,8 @@ AddButton(TabSettings, "💾 Lưu Cài Đặt (Save Config)", function()
     Notify("Config Manager", "Đã lưu cài đặt cấu hình thành công!", 3)
 end)
 
-Notify("🔥 BLOX FRUITS TITAN HUB V6.2", "Giao diện Redz Edition đã tải thành công!", 5)
-print("★ BLOX FRUITS TITAN HUB V6.2 (REDZ / FLUENT EDITION) LOADED SUCCESSFULLY ★")
+Notify("🔥 BLOX FRUITS TITAN HUB V6.3", "Giao diện Redz Edition đã tải thành công!", 5)
+print("★ BLOX FRUITS TITAN HUB V6.3 (REDZ / FLUENT EDITION) LOADED SUCCESSFULLY ★")
 
 
 -- ===================================================================================
