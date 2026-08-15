@@ -1,6 +1,6 @@
--- [ DATA: QUESTS_DATA.LUA - TOẠ ĐỘ 75+ NHIỆM VỤ LV 1-2550 ]
+-- [ DATA: QUESTS_DATA.LUA - TOẠ ĐỘ NHIỆM VỤ ĐẦY ĐỦ LEVEL 1 -> 2800 ]
 local QuestData = {
-    -- SEA 1
+    -- ==================== SEA 1 (LEVEL 1 -> 700) ====================
     {MinLvl = 1, MaxLvl = 9, Mob = "Bandit", QuestName = "BanditQuest1", QuestLvl = 1, NpcCFrame = CFrame.new(1059, 16, 1550), MobCFrame = CFrame.new(1145, 17, 1634)},
     {MinLvl = 10, MaxLvl = 14, Mob = "Monkey", QuestName = "JungleQuest", QuestLvl = 1, NpcCFrame = CFrame.new(-1598, 36, 153), MobCFrame = CFrame.new(-1618, 22, 142)},
     {MinLvl = 15, MaxLvl = 29, Mob = "Gorilla", QuestName = "JungleQuest", QuestLvl = 2, NpcCFrame = CFrame.new(-1598, 36, 153), MobCFrame = CFrame.new(-1240, 6, -495)},
@@ -28,7 +28,7 @@ local QuestData = {
     {MinLvl = 625, MaxLvl = 649, Mob = "Galley Pirate", QuestName = "FountainQuest", QuestLvl = 1, NpcCFrame = CFrame.new(5258, 38, 4050), MobCFrame = CFrame.new(5580, 40, 3950)},
     {MinLvl = 650, MaxLvl = 699, Mob = "Galley Captain", QuestName = "FountainQuest", QuestLvl = 2, NpcCFrame = CFrame.new(5258, 38, 4050), MobCFrame = CFrame.new(5650, 40, 4950)},
 
-    -- SEA 2
+    -- ==================== SEA 2 (LEVEL 700 -> 1500) ====================
     {MinLvl = 700, MaxLvl = 724, Mob = "Raider", QuestName = "Area1Quest", QuestLvl = 1, NpcCFrame = CFrame.new(-427, 73, 1836), MobCFrame = CFrame.new(-740, 73, 2400)},
     {MinLvl = 725, MaxLvl = 774, Mob = "Mercenary", QuestName = "Area1Quest", QuestLvl = 2, NpcCFrame = CFrame.new(-427, 73, 1836), MobCFrame = CFrame.new(-920, 73, 1600)},
     {MinLvl = 775, MaxLvl = 799, Mob = "Swan Pirate", QuestName = "Area2Quest", QuestLvl = 1, NpcCFrame = CFrame.new(635, 73, 918), MobCFrame = CFrame.new(880, 120, 1200)},
@@ -51,7 +51,7 @@ local QuestData = {
     {MinLvl = 1425, MaxLvl = 1449, Mob = "Sea Soldier", QuestName = "ForgottenQuest", QuestLvl = 1, NpcCFrame = CFrame.new(-3055, 239, -10145), MobCFrame = CFrame.new(-3200, 239, -9700)},
     {MinLvl = 1450, MaxLvl = 1499, Mob = "Water Fighter", QuestName = "ForgottenQuest", QuestLvl = 2, NpcCFrame = CFrame.new(-3055, 239, -10145), MobCFrame = CFrame.new(-3400, 239, -10500)},
 
-    -- SEA 3
+    -- ==================== SEA 3 (LEVEL 1500 -> 2800 MAX) ====================
     {MinLvl = 1500, MaxLvl = 1524, Mob = "Pirate Millionaire", QuestName = "PortTownQuest", QuestLvl = 1, NpcCFrame = CFrame.new(-290, 6, 5343), MobCFrame = CFrame.new(-380, 6, 5550)},
     {MinLvl = 1525, MaxLvl = 1574, Mob = "Pistol Billionaire", QuestName = "PortTownQuest", QuestLvl = 2, NpcCFrame = CFrame.new(-290, 6, 5343), MobCFrame = CFrame.new(-50, 6, 5350)},
     {MinLvl = 1575, MaxLvl = 1599, Mob = "Dragon Crew Warrior", QuestName = "AmazonQuest", QuestLvl = 1, NpcCFrame = CFrame.new(5833, 52, -1100), MobCFrame = CFrame.new(6200, 52, -1300)},
@@ -77,7 +77,14 @@ local QuestData = {
     {MinLvl = 2375, MaxLvl = 2399, Mob = "Cookie Crafter", QuestName = "CakeQuest1", QuestLvl = 1, NpcCFrame = CFrame.new(-2000, 38, -12000), MobCFrame = CFrame.new(-2300, 38, -12200)},
     {MinLvl = 2400, MaxLvl = 2449, Mob = "Cake Guard", QuestName = "CakeQuest1", QuestLvl = 2, NpcCFrame = CFrame.new(-2000, 38, -12000), MobCFrame = CFrame.new(-1800, 38, -11800)},
     {MinLvl = 2450, MaxLvl = 2499, Mob = "Isle Outlaw", QuestName = "TikiQuest1", QuestLvl = 1, NpcCFrame = CFrame.new(-16235, 9, 413), MobCFrame = CFrame.new(-16500, 9, 700)},
-    {MinLvl = 2500, MaxLvl = 2550, Mob = "Island Empress", QuestName = "TikiQuest2", QuestLvl = 1, NpcCFrame = CFrame.new(-16235, 9, 413), MobCFrame = CFrame.new(-16000, 9, 100)}
+    {MinLvl = 2500, MaxLvl = 2549, Mob = "Island Empress", QuestName = "TikiQuest2", QuestLvl = 1, NpcCFrame = CFrame.new(-16235, 9, 413), MobCFrame = CFrame.new(-16000, 9, 100)},
+    
+    -- === MỞ RỘNG UPDATE LEVEL 2550 -> 2800 MAX ===
+    {MinLvl = 2550, MaxLvl = 2599, Mob = "Sun-kissed Warrior", QuestName = "TikiQuest3", QuestLvl = 1, NpcCFrame = CFrame.new(-16600, 25, 1200), MobCFrame = CFrame.new(-16800, 25, 1400)},
+    {MinLvl = 2600, MaxLvl = 2649, Mob = "Isle Champion", QuestName = "TikiQuest3", QuestLvl = 2, NpcCFrame = CFrame.new(-16600, 25, 1200), MobCFrame = CFrame.new(-17100, 30, 1100)},
+    {MinLvl = 2650, MaxLvl = 2699, Mob = "Tiki Berserker", QuestName = "DragonIslandQuest1", QuestLvl = 1, NpcCFrame = CFrame.new(-18200, 45, -2500), MobCFrame = CFrame.new(-18500, 45, -2300)},
+    {MinLvl = 2700, MaxLvl = 2749, Mob = "Dragon Guard", QuestName = "DragonIslandQuest1", QuestLvl = 2, NpcCFrame = CFrame.new(-18200, 45, -2500), MobCFrame = CFrame.new(-18800, 50, -2700)},
+    {MinLvl = 2750, MaxLvl = 2800, Mob = "Celestial Champion", QuestName = "DragonIslandQuest2", QuestLvl = 1, NpcCFrame = CFrame.new(-19200, 80, -3200), MobCFrame = CFrame.new(-19500, 80, -3400)}
 }
 
 return QuestData

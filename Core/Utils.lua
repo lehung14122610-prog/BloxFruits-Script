@@ -1,14 +1,15 @@
--- [ CORE: UTILS.LUA - FIX LAG, BLACK SCREEN & SERVER HOP ]
+-- [ CORE: UTILS.LUA - FIX LAG, BLACK SCREEN WITH VISIBLE BUTTON & SERVER HOP ]
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
 local TeleportService = game:GetService("TeleportService")
 local VirtualUser = game:GetService("VirtualUser")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera or Workspace:FindFirstChildOfClass("Camera")
 
 local Utils = {}
-local BlackScreenFrame = nil
+local BlackScreenGui = nil
 
 function Utils.ApplyUltraFixLag()
     pcall(function()
@@ -27,34 +28,55 @@ function Utils.ApplyUltraFixLag()
     end)
 end
 
+-- SỬA LỖI ULTRA BLACK SCREEN (NÚT BẤM TO NỔI BẬT LỚP TỐI CAO)
 function Utils.ToggleBlackScreen(state)
     if state then
-        if not BlackScreenFrame then
+        if not BlackScreenGui then
             local pgui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer.PlayerGui
-            local sg = Instance.new("ScreenGui")
-            sg.Name = "BF_Hub_BlackScreen_Titan"
-            sg.ResetOnSpawn = false
-            sg.DisplayOrder = 999999
-            sg.Parent = pgui
+            BlackScreenGui = Instance.new("ScreenGui")
+            BlackScreenGui.Name = "BF_Titan_UltraBlackScreen_V8"
+            BlackScreenGui.ResetOnSpawn = false
+            BlackScreenGui.DisplayOrder = 10000000 -- Lớp tối cao
+            BlackScreenGui.IgnoreGuiInset = true
+            BlackScreenGui.Parent = pgui
             
-            BlackScreenFrame = Instance.new("Frame")
-            BlackScreenFrame.Size = UDim2.new(1, 0, 1, 0)
-            BlackScreenFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-            BlackScreenFrame.Parent = sg
+            local bg = Instance.new("Frame")
+            bg.Size = UDim2.new(1, 0, 1, 0)
+            bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            bg.Parent = BlackScreenGui
             
-            local txt = Instance.new("TextLabel")
-            txt.Parent = BlackScreenFrame
-            txt.Size = UDim2.new(1, 0, 1, 0)
-            txt.Text = "ULTRA BLACK SCREEN MODE - Nhap Icon Noi (🔥) de mo lai"
-            txt.TextColor3 = Color3.fromRGB(0, 255, 170)
-            txt.Font = Enum.Font.GothamBold
-            txt.TextSize = 22
+            local btnExit = Instance.new("TextButton")
+            btnExit.Size = UDim2.new(0, 320, 0, 65)
+            btnExit.Position = UDim2.new(0.5, -160, 0.5, -32)
+            btnExit.BackgroundColor3 = Color3.fromRGB(15, 20, 30)
+            btnExit.Text = "🌙 ULTRA BLACK SCREEN (TREO ĐÊM)
+[CHẠM VÀO ĐÂY ĐỂ MỞ LẠI GIAO DIỆN]"
+            btnExit.TextColor3 = Color3.fromRGB(0, 255, 180)
+            btnExit.Font = Enum.Font.GothamBold
+            btnExit.TextSize = 13
+            btnExit.Parent = bg
+            
+            local btnCorner = Instance.new("UICorner")
+            btnCorner.CornerRadius = UDim.new(0, 10)
+            btnCorner.Parent = btnExit
+            
+            local btnStroke = Instance.new("UIStroke")
+            btnStroke.Color = Color3.fromRGB(0, 220, 255)
+            btnStroke.Thickness = 2
+            btnStroke.Parent = btnExit
+            
+            btnExit.MouseButton1Click:Connect(function()
+                Utils.ToggleBlackScreen(false)
+                if getgenv().BF_Hub_Config then
+                    getgenv().BF_Hub_Config.BlackScreen = false
+                end
+            end)
         end
-        BlackScreenFrame.Visible = true
-        game:GetService("RunService"):Set3dRenderingEnabled(false)
+        BlackScreenGui.Enabled = true
+        RunService:Set3dRenderingEnabled(false)
     else
-        if BlackScreenFrame then BlackScreenFrame.Visible = false end
-        game:GetService("RunService"):Set3dRenderingEnabled(true)
+        if BlackScreenGui then BlackScreenGui.Enabled = false end
+        RunService:Set3dRenderingEnabled(true)
     end
 end
 

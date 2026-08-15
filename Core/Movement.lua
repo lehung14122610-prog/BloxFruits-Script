@@ -1,4 +1,4 @@
--- [ CORE: MOVEMENT.LUA - TWEEN BYPASS, GRAVITY LOCK & FLY V2 ]
+-- [ CORE: MOVEMENT.LUA - STATE-MACHINE TWEEN, HOVER LOCK & FLY V2 ]
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
@@ -8,7 +8,7 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera or Workspace:FindFirstChildOfClass("Camera")
 
 local Movement = {}
-local FarmBodyVel, FarmBodyGyro = nil, nil
+local HoverBodyPos, HoverBodyGyro = nil, nil
 local ActiveTween = nil
 local flyBodyVel, flyBodyGyro = nil, nil
 local flyKeys = {W = false, A = false, S = false, D = false, E = false, Q = false}
@@ -17,38 +17,58 @@ local function GetRoot()
     return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 end
 
-function Movement.EnableGravityLock(targetCFrame)
+local function GetHumanoid()
+    return LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+end
+
+-- 1. HOVER LOCK CHỐNG RUNG LẮC TUYỆT ĐỐI (STATE-MACHINE HOVER)
+function Movement.EnableHoverLock(targetCFrame)
     local root = GetRoot()
-    if not root then return end
+    local hum = GetHumanoid()
+    if not root or not hum then return end
     
-    if not FarmBodyVel or FarmBodyVel.Parent ~= root then
-        if FarmBodyVel then FarmBodyVel:Destroy() end
-        FarmBodyVel = Instance.new("BodyVelocity")
-        FarmBodyVel.Name = "BF_Hub_GravityLock_Vel"
-        FarmBodyVel.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-        FarmBodyVel.Velocity = Vector3.new(0, 0, 0)
-        FarmBodyVel.Parent = root
+    -- Ngắt toàn bộ quán tính rơi để không giật
+    root.Velocity = Vector3.new(0, 0, 0)
+    root.RotVelocity = Vector3.new(0, 0, 0)
+    hum.PlatformStand = true
+    
+    if not HoverBodyPos or HoverBodyPos.Parent ~= root then
+        if HoverBodyPos then HoverBodyPos:Destroy() end
+        HoverBodyPos = Instance.new("BodyPosition")
+        HoverBodyPos.Name = "BF_Titan_HoverPos"
+        HoverBodyPos.P = 50000
+        HoverBodyPos.D = 1000
+        HoverBodyPos.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+        HoverBodyPos.Position = targetCFrame.Position
+        HoverBodyPos.Parent = root
+    else
+        HoverBodyPos.Position = targetCFrame.Position
     end
     
-    if not FarmBodyGyro or FarmBodyGyro.Parent ~= root then
-        if FarmBodyGyro then FarmBodyGyro:Destroy() end
-        FarmBodyGyro = Instance.new("BodyGyro")
-        FarmBodyGyro.Name = "BF_Hub_GravityLock_Gyro"
-        FarmBodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
-        FarmBodyGyro.CFrame = targetCFrame or root.CFrame
-        FarmBodyGyro.Parent = root
-    end
-    
-    if targetCFrame and FarmBodyGyro then
-        FarmBodyGyro.CFrame = targetCFrame
+    if not HoverBodyGyro or HoverBodyGyro.Parent ~= root then
+        if HoverBodyGyro then HoverBodyGyro:Destroy() end
+        HoverBodyGyro = Instance.new("BodyGyro")
+        HoverBodyGyro.Name = "BF_Titan_HoverGyro"
+        HoverBodyGyro.P = 50000
+        HoverBodyGyro.D = 1000
+        HoverBodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+        HoverBodyGyro.CFrame = targetCFrame
+        HoverBodyGyro.Parent = root
+    else
+        HoverBodyGyro.CFrame = targetCFrame
     end
 end
 
-function Movement.DisableGravityLock()
-    if FarmBodyVel then FarmBodyVel:Destroy() FarmBodyVel = nil end
-    if FarmBodyGyro then FarmBodyGyro:Destroy() FarmBodyGyro = nil end
+function Movement.DisableHoverLock()
+    local hum = GetHumanoid()
+    if HoverBodyPos then HoverBodyPos:Destroy() HoverBodyPos = nil end
+    if HoverBodyGyro then HoverBodyGyro:Destroy() HoverBodyGyro = nil end
+    if hum and not (getgenv().BF_Hub_Config and getgenv().BF_Hub_Config.Fly) then
+        hum.PlatformStand = false
+    end
 end
 
+-- 2. TWEEN ENGINE AN TOÀN TRÁNH BẪY ANTI-CHEAT
 function Movement.StopTween()
     if ActiveTween then
         ActiveTween:Cancel()
@@ -58,12 +78,18 @@ end
 
 function Movement.TweenTo(targetCFrame, customSpeed)
     local root = GetRoot()
+    local hum = GetHumanoid()
     if not root then return end
+    
+    -- Khi bắt đầu di chuyển, tắt HoverLock để không xung đột vật lý
+    Movement.DisableHoverLock()
+    if hum then hum.PlatformStand = true end
+    root.Velocity = Vector3.new(0, 0, 0)
     
     local speed = customSpeed or (getgenv().BF_Hub_Config and getgenv().BF_Hub_Config.TweenSpeed or 275)
     local distance = (root.Position - targetCFrame.Position).Magnitude
     
-    if distance < 3.5 then
+    if distance < 4.0 then
         root.CFrame = targetCFrame
         return nil
     end
@@ -102,19 +128,29 @@ function Movement.SafeWayPointTween(targetCFrame)
     end
 end
 
+-- 3. FLY V2 ENGINE - MƯỢT TUYỆT ĐỐI, KHÔNG VĂNG KHI HẠ CÁNH
 function Movement.StartFly(speed)
     local root = GetRoot()
-    if not root then return end
+    local hum = GetHumanoid()
+    if not root or not hum then return end
+    
+    Movement.DisableHoverLock()
+    hum.PlatformStand = true
+    root.Velocity = Vector3.new(0, 0, 0)
     
     if flyBodyVel then flyBodyVel:Destroy() end
     if flyBodyGyro then flyBodyGyro:Destroy() end
     
     flyBodyVel = Instance.new("BodyVelocity")
+    flyBodyVel.Name = "BF_Titan_FlyVel"
     flyBodyVel.MaxForce = Vector3.new(1e9, 1e9, 1e9)
     flyBodyVel.Velocity = Vector3.new(0, 0, 0)
     flyBodyVel.Parent = root
     
     flyBodyGyro = Instance.new("BodyGyro")
+    flyBodyGyro.Name = "BF_Titan_FlyGyro"
+    flyBodyGyro.P = 50000
+    flyBodyGyro.D = 1000
     flyBodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
     flyBodyGyro.CFrame = root.CFrame
     flyBodyGyro.Parent = root
@@ -133,7 +169,7 @@ function Movement.StartFly(speed)
             if flyKeys.Q then moveDir = moveDir - Vector3.new(0, 1, 0) end
             
             if moveDir.Magnitude > 0 then moveDir = moveDir.Unit end
-            flyBodyVel.Velocity = moveDir * (speed or 75)
+            flyBodyVel.Velocity = moveDir * (speed or (cfg and cfg.FlySpeed) or 75)
             flyBodyGyro.CFrame = camCF
             RunService.RenderStepped:Wait()
         end
@@ -142,8 +178,18 @@ function Movement.StartFly(speed)
 end
 
 function Movement.StopFly()
+    local root = GetRoot()
+    local hum = GetHumanoid()
     if flyBodyVel then flyBodyVel:Destroy() flyBodyVel = nil end
     if flyBodyGyro then flyBodyGyro:Destroy() flyBodyGyro = nil end
+    if root then
+        root.Velocity = Vector3.new(0, 0, 0)
+        root.RotVelocity = Vector3.new(0, 0, 0)
+    end
+    if hum then
+        hum.PlatformStand = false
+        hum:ChangeState(Enum.HumanoidStateType.Running)
+    end
 end
 
 UserInputService.InputBegan:Connect(function(input, gpe)
@@ -157,10 +203,10 @@ UserInputService.InputEnded:Connect(function(input, gpe)
     if flyKeys[k] ~= nil then flyKeys[k] = false end
 end)
 
--- Noclip Thread
+-- 4. NOCLIP THREAD AN TOÀN
 RunService.Stepped:Connect(function()
     local cfg = getgenv().BF_Hub_Config
-    if cfg and (cfg.Noclip or cfg.AutoFarmLevel or cfg.AutoFarmSelectedMob or cfg.AutoFarmBoss or cfg.Fly) then
+    if cfg and (cfg.Noclip or cfg.AutoFarmLevel or cfg.AutoFarmSelectedMob or cfg.AutoFarmBoss or cfg.Fly or cfg.AutoFarmChest) then
         local char = LocalPlayer.Character
         if char then
             for _, part in pairs(char:GetChildren()) do
@@ -170,7 +216,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- Water Walk Platform
+-- 5. WATER WALK THREAD
 local WaterPlatform = Instance.new("Part")
 WaterPlatform.Name = "BF_Hub_WaterPlatform_Titan"
 WaterPlatform.Size = Vector3.new(600, 1, 600)
@@ -195,7 +241,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- WalkSpeed & JumpPower
+-- 6. WALKSPEED & JUMPPOWER & INFINITE JUMP
 RunService.RenderStepped:Connect(function()
     local cfg = getgenv().BF_Hub_Config
     local char = LocalPlayer.Character

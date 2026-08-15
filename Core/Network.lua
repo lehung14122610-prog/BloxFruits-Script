@@ -1,4 +1,4 @@
--- [ CORE: NETWORK.LUA - REMOTE EVENT & CHARACTER SERVICES ]
+-- [ CORE: NETWORK.LUA - REMOTE EVENT & CHARACTER SERVICES V8.0 ]
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualUser = game:GetService("VirtualUser")
@@ -32,10 +32,22 @@ function Network.GetPlayerLevelSafe()
     return lvl
 end
 
+function Network.GetPlayerBeli()
+    local beli = 0
+    pcall(function()
+        if LocalPlayer and LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Beli") then
+            beli = tonumber(LocalPlayer.Data.Beli.Value) or 0
+        end
+    end)
+    return beli
+end
+
 function Network.InvokeCommF(arg1, arg2, arg3, arg4)
     local res = nil
     pcall(function()
-        res = ReplicatedStorage.Remotes.CommF_:InvokeServer(arg1, arg2, arg3, arg4)
+        if ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("CommF_") then
+            res = ReplicatedStorage.Remotes.CommF_:InvokeServer(arg1, arg2, arg3, arg4)
+        end
     end)
     return res
 end
@@ -79,6 +91,31 @@ function Network.ExecuteFastAttack(targetWeaponType)
         if tool then tool:Activate() end
         VirtualUser:Button1Down(Vector2.new(0, 0), Camera.CFrame)
         VirtualUser:Button1Up(Vector2.new(0, 0), Camera.CFrame)
+    end)
+end
+
+-- Sửa lỗi Auto Buso Haki 100%
+function Network.ActivateBusoHaki()
+    pcall(function()
+        local char = Network.GetCharacter()
+        if char and not char:FindFirstChild("HasBuso") then
+            Network.InvokeCommF("Buso")
+        end
+    end)
+end
+
+-- Sửa lỗi Auto Gacha Cousin
+function Network.BuyRandomFruitGacha()
+    local success, res = pcall(function()
+        return Network.InvokeCommF("Cousin", "Buy")
+    end)
+    return success and res
+end
+
+-- Tăng tốc độ cộng điểm chỉ số
+function Network.BatchAddPoint(statName, points)
+    pcall(function()
+        Network.InvokeCommF("AddPoint", statName, tonumber(points) or 10)
     end)
 end
 

@@ -1,5 +1,8 @@
--- [ CORE: UI_LIBRARY.LUA - REDZ GLASSMORPHISM UI ENGINE ]
+-- [ CORE: UI_LIBRARY.LUA - FLUENT REDZ SUPREME GLASSMORPHISM V8.0 ]
 local Players = game:GetService("Players")
+local StatsService = game:GetService("Stats")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
 
 local function GetUIContainer()
@@ -28,15 +31,16 @@ ScreenGui.IgnoreGuiInset = true
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = parentUI
 
--- Mobile Toggle Icon (🔥)
+-- 1. NÚT ICON NỔI MOBILE TOGGLE (🔥) DRAGGABLE VỚI HIỆU ỨNG GLOW
 local MobileFloatingBtn = Instance.new("TextButton")
 MobileFloatingBtn.Name = "MobileToggleIcon"
-MobileFloatingBtn.Size = UDim2.new(0, 52, 0, 52)
-MobileFloatingBtn.Position = UDim2.new(0, 16, 0.22, 0)
-MobileFloatingBtn.BackgroundColor3 = Color3.fromRGB(15, 18, 28)
-MobileFloatingBtn.Text = "🔥"
-MobileFloatingBtn.TextSize = 24
-MobileFloatingBtn.ZIndex = 1000
+MobileFloatingBtn.Size = UDim2.new(0, 50, 0, 50)
+MobileFloatingBtn.Position = UDim2.new(0, 15, 0.20, 0)
+MobileFloatingBtn.BackgroundColor3 = Color3.fromRGB(12, 16, 24)
+MobileFloatingBtn.Text = "⚡"
+MobileFloatingBtn.TextColor3 = Color3.fromRGB(0, 235, 255)
+MobileFloatingBtn.TextSize = 22
+MobileFloatingBtn.ZIndex = 10000000
 MobileFloatingBtn.Active = true
 MobileFloatingBtn.Draggable = true
 MobileFloatingBtn.Parent = ScreenGui
@@ -47,15 +51,16 @@ MobileBtnCorner.Parent = MobileFloatingBtn
 
 local MobileBtnStroke = Instance.new("UIStroke")
 MobileBtnStroke.Color = Color3.fromRGB(0, 220, 255)
-MobileBtnStroke.Thickness = 2.5
+MobileBtnStroke.Thickness = 2.2
 MobileBtnStroke.Parent = MobileFloatingBtn
 
--- Main Frame
+-- 2. KHUNG CHÍNH FLUENT GLASSMORPHISM (MAIN FRAME)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 580, 0, 370)
-MainFrame.Position = UDim2.new(0.5, -290, 0.5, -185)
-MainFrame.BackgroundColor3 = Color3.fromRGB(13, 15, 22)
+MainFrame.Size = UDim2.new(0, 600, 0, 390)
+MainFrame.Position = UDim2.new(0.5, -300, 0.5, -195)
+MainFrame.BackgroundColor3 = Color3.fromRGB(11, 13, 19)
+MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.ZIndex = 500
@@ -63,41 +68,87 @@ MainFrame.Visible = true
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.CornerRadius = UDim.new(0, 10)
 MainCorner.Parent = MainFrame
 
 local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(35, 42, 60)
-MainStroke.Thickness = 1.8
+MainStroke.Color = Color3.fromRGB(30, 38, 56)
+MainStroke.Thickness = 1.6
 MainStroke.Parent = MainFrame
 
 MobileFloatingBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- Title Bar
+-- 3. THANH TIÊU ĐỀ & HUD DASHBOARD REAL-TIME (HEADER HUD)
 local TitleBar = Instance.new("Frame")
-TitleBar.Size = UDim2.new(1, 0, 0, 42)
-TitleBar.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
+TitleBar.Size = UDim2.new(1, 0, 0, 44)
+TitleBar.BackgroundColor3 = Color3.fromRGB(16, 20, 30)
 TitleBar.ZIndex = 501
 TitleBar.Parent = MainFrame
 
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 10)
+TitleCorner.Parent = TitleBar
+
 local TitleText = Instance.new("TextLabel")
 TitleText.Parent = TitleBar
-TitleText.Size = UDim2.new(1, -120, 1, 0)
+TitleText.Size = UDim2.new(0, 230, 1, 0)
 TitleText.Position = UDim2.new(0, 14, 0, 0)
 TitleText.BackgroundTransparency = 1
-TitleText.Text = "⚡ BLOX FRUITS TITAN HUB V7.5"
+TitleText.Text = "⚡ BLOX FRUITS TITAN V8.0"
 TitleText.TextColor3 = Color3.fromRGB(0, 235, 255)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 14
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 TitleText.ZIndex = 502
 
+-- HUD FPS & Ping & Sea
+local HudContainer = Instance.new("Frame")
+HudContainer.Size = UDim2.new(0, 240, 1, -12)
+HudContainer.Position = UDim2.new(1, -290, 0, 6)
+HudContainer.BackgroundColor3 = Color3.fromRGB(22, 28, 42)
+HudContainer.ZIndex = 502
+HudContainer.Parent = TitleBar
+
+local HudCorner = Instance.new("UICorner")
+HudCorner.CornerRadius = UDim.new(0, 6)
+HudCorner.Parent = HudContainer
+
+local HudLabel = Instance.new("TextLabel")
+HudLabel.Size = UDim2.new(1, 0, 1, 0)
+HudLabel.BackgroundTransparency = 1
+HudLabel.Text = "FPS: 60 | PING: 45ms | SEA " .. (game.PlaceId == 2753915549 and "1" or game.PlaceId == 4442272183 and "2" or "3")
+HudLabel.TextColor3 = Color3.fromRGB(0, 255, 180)
+HudLabel.Font = Enum.Font.GothamMedium
+HudLabel.TextSize = 11
+HudLabel.ZIndex = 503
+HudLabel.Parent = HudContainer
+
+-- Live FPS Counter Loop
+task.spawn(function()
+    local lastUpdate = tick()
+    local frameCount = 0
+    RunService.RenderStepped:Connect(function()
+        frameCount = frameCount + 1
+        if tick() - lastUpdate >= 1 then
+            local fps = frameCount
+            frameCount = 0
+            lastUpdate = tick()
+            local ping = 45
+            pcall(function()
+                ping = math.floor(StatsService.Network.ServerStatsItem["Data Ping"]:GetValue())
+            end)
+            local seaNum = game.PlaceId == 2753915549 and "1" or game.PlaceId == 4442272183 and "2" or "3"
+            HudLabel.Text = "FPS: " .. fps .. " | PING: " .. ping .. "ms | SEA " .. seaNum
+        end
+    end)
+end)
+
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = TitleBar
 CloseBtn.Size = UDim2.new(0, 28, 0, 28)
-CloseBtn.Position = UDim2.new(1, -35, 0, 7)
+CloseBtn.Position = UDim2.new(1, -36, 0, 8)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(235, 55, 65)
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -113,19 +164,18 @@ CloseBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = false
 end)
 
--- Sidebar
+-- 4. SIDEBAR VỚI AVATAR PROFILE CARD
 local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 165, 1, -42)
-Sidebar.Position = UDim2.new(0, 0, 0, 42)
-Sidebar.BackgroundColor3 = Color3.fromRGB(10, 12, 17)
+Sidebar.Size = UDim2.new(0, 170, 1, -44)
+Sidebar.Position = UDim2.new(0, 0, 0, 44)
+Sidebar.BackgroundColor3 = Color3.fromRGB(9, 11, 16)
 Sidebar.ZIndex = 501
 Sidebar.Parent = MainFrame
 
--- Profile Card
 local ProfileCard = Instance.new("Frame")
-ProfileCard.Size = UDim2.new(1, -10, 0, 56)
-ProfileCard.Position = UDim2.new(0, 5, 0, 5)
-ProfileCard.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
+ProfileCard.Size = UDim2.new(1, -12, 0, 58)
+ProfileCard.Position = UDim2.new(0, 6, 0, 6)
+ProfileCard.BackgroundColor3 = Color3.fromRGB(16, 20, 30)
 ProfileCard.ZIndex = 502
 ProfileCard.Parent = Sidebar
 
@@ -133,15 +183,10 @@ local ProfileCorner = Instance.new("UICorner")
 ProfileCorner.CornerRadius = UDim.new(0, 8)
 ProfileCorner.Parent = ProfileCard
 
-local ProfileStroke = Instance.new("UIStroke")
-ProfileStroke.Color = Color3.fromRGB(30, 38, 55)
-ProfileStroke.Thickness = 1
-ProfileStroke.Parent = ProfileCard
-
 local AvatarImg = Instance.new("ImageLabel")
-AvatarImg.Size = UDim2.new(0, 36, 0, 36)
+AvatarImg.Size = UDim2.new(0, 38, 0, 38)
 AvatarImg.Position = UDim2.new(0, 6, 0, 10)
-AvatarImg.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
+AvatarImg.BackgroundColor3 = Color3.fromRGB(25, 30, 45)
 AvatarImg.ZIndex = 503
 AvatarImg.Parent = ProfileCard
 
@@ -154,8 +199,8 @@ pcall(function()
 end)
 
 local ProfileName = Instance.new("TextLabel")
-ProfileName.Size = UDim2.new(1, -48, 0, 16)
-ProfileName.Position = UDim2.new(0, 46, 0, 10)
+ProfileName.Size = UDim2.new(1, -52, 0, 16)
+ProfileName.Position = UDim2.new(0, 48, 0, 10)
 ProfileName.BackgroundTransparency = 1
 ProfileName.Text = tostring(LocalPlayer.DisplayName or LocalPlayer.Name)
 ProfileName.TextColor3 = Color3.fromRGB(240, 240, 240)
@@ -167,10 +212,11 @@ ProfileName.ZIndex = 503
 ProfileName.Parent = ProfileCard
 
 local ProfileStat = Instance.new("TextLabel")
-ProfileStat.Size = UDim2.new(1, -48, 0, 14)
-ProfileStat.Position = UDim2.new(0, 46, 0, 28)
+ProfileStat.Size = UDim2.new(1, -52, 0, 14)
+ProfileStat.Position = UDim2.new(0, 48, 0, 28)
 ProfileStat.BackgroundTransparency = 1
-ProfileStat.Text = "Lv. " .. tostring((LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Level")) and LocalPlayer.Data.Level.Value or 1)
+local curLvl = (LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Level")) and LocalPlayer.Data.Level.Value or 1
+ProfileStat.Text = "Lv. " .. tostring(curLvl) .. " / 2800"
 ProfileStat.TextColor3 = Color3.fromRGB(0, 220, 255)
 ProfileStat.Font = Enum.Font.GothamMedium
 ProfileStat.TextSize = 11
@@ -178,10 +224,19 @@ ProfileStat.TextXAlignment = Enum.TextXAlignment.Left
 ProfileStat.ZIndex = 503
 ProfileStat.Parent = ProfileCard
 
--- Sidebar Tab Container
+task.spawn(function()
+    while task.wait(3) do
+        pcall(function()
+            local l = (LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Level")) and LocalPlayer.Data.Level.Value or 1
+            ProfileStat.Text = "Lv. " .. tostring(l) .. " / 2800"
+        end)
+    end
+end)
+
+-- Sidebar Tabs Container
 local TabContainer = Instance.new("ScrollingFrame")
-TabContainer.Size = UDim2.new(1, 0, 1, -72)
-TabContainer.Position = UDim2.new(0, 0, 0, 68)
+TabContainer.Size = UDim2.new(1, 0, 1, -74)
+TabContainer.Position = UDim2.new(0, 0, 0, 70)
 TabContainer.BackgroundTransparency = 1
 TabContainer.ScrollBarThickness = 2
 TabContainer.ZIndex = 502
@@ -192,10 +247,10 @@ TabListLayout.Parent = TabContainer
 TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 TabListLayout.Padding = UDim.new(0, 4)
 
--- Content Area
+-- 5. VÙNG NỘI DUNG CHÍNH (CONTENT AREA)
 local ContentArea = Instance.new("Frame")
-ContentArea.Size = UDim2.new(1, -175, 1, -50)
-ContentArea.Position = UDim2.new(0, 170, 0, 46)
+ContentArea.Size = UDim2.new(1, -180, 1, -52)
+ContentArea.Position = UDim2.new(0, 175, 0, 48)
 ContentArea.BackgroundTransparency = 1
 ContentArea.ZIndex = 501
 ContentArea.Parent = MainFrame
@@ -209,7 +264,7 @@ function UILibrary.CreateTab(name, icon)
     local tabBtn = Instance.new("TextButton")
     tabBtn.Size = UDim2.new(1, -10, 0, 34)
     tabBtn.Position = UDim2.new(0, 5, 0, 0)
-    tabBtn.BackgroundColor3 = Color3.fromRGB(16, 20, 28)
+    tabBtn.BackgroundColor3 = Color3.fromRGB(15, 18, 26)
     tabBtn.Text = (icon or "📁") .. " " .. name
     tabBtn.TextColor3 = Color3.fromRGB(180, 190, 210)
     tabBtn.Font = Enum.Font.GothamMedium
@@ -243,7 +298,7 @@ function UILibrary.CreateTab(name, icon)
     tabBtn.MouseButton1Click:Connect(function()
         for _, p in pairs(Pages) do p.Visible = false end
         for _, b in pairs(TabButtons) do 
-            b.BackgroundColor3 = Color3.fromRGB(16, 20, 28)
+            b.BackgroundColor3 = Color3.fromRGB(15, 18, 26)
             b.TextColor3 = Color3.fromRGB(180, 190, 210)
         end
         page.Visible = true
@@ -283,7 +338,7 @@ end
 function UILibrary.AddToggle(parent, text, default, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1, -8, 0, 36)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
+    frame.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
     frame.ZIndex = 503
     frame.Parent = parent
     
@@ -292,7 +347,7 @@ function UILibrary.AddToggle(parent, text, default, callback)
     corner.Parent = frame
     
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(32, 38, 52)
+    stroke.Color = Color3.fromRGB(30, 36, 50)
     stroke.Thickness = 1
     stroke.Parent = frame
     
@@ -311,7 +366,7 @@ function UILibrary.AddToggle(parent, text, default, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 46, 0, 22)
     btn.Position = UDim2.new(1, -54, 0.5, -11)
-    btn.BackgroundColor3 = default and Color3.fromRGB(0, 210, 120) or Color3.fromRGB(50, 58, 76)
+    btn.BackgroundColor3 = default and Color3.fromRGB(0, 210, 120) or Color3.fromRGB(48, 54, 70)
     btn.Text = default and "ON" or "OFF"
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.GothamBold
@@ -326,7 +381,7 @@ function UILibrary.AddToggle(parent, text, default, callback)
     local state = default
     btn.MouseButton1Click:Connect(function()
         state = not state
-        btn.BackgroundColor3 = state and Color3.fromRGB(0, 210, 120) or Color3.fromRGB(50, 58, 76)
+        btn.BackgroundColor3 = state and Color3.fromRGB(0, 210, 120) or Color3.fromRGB(48, 54, 70)
         btn.Text = state and "ON" or "OFF"
         callback(state)
     end)
@@ -353,7 +408,7 @@ end
 function UILibrary.AddSlider(parent, text, min, max, default, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1, -8, 0, 44)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
+    frame.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
     frame.ZIndex = 503
     frame.Parent = parent
     
@@ -362,7 +417,7 @@ function UILibrary.AddSlider(parent, text, min, max, default, callback)
     corner.Parent = frame
     
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(32, 38, 52)
+    stroke.Color = Color3.fromRGB(30, 36, 50)
     stroke.Thickness = 1
     stroke.Parent = frame
     
@@ -381,10 +436,14 @@ function UILibrary.AddSlider(parent, text, min, max, default, callback)
     local sliderBg = Instance.new("TextButton")
     sliderBg.Size = UDim2.new(1, -20, 0, 8)
     sliderBg.Position = UDim2.new(0, 10, 0, 26)
-    sliderBg.BackgroundColor3 = Color3.fromRGB(45, 52, 70)
+    sliderBg.BackgroundColor3 = Color3.fromRGB(40, 46, 62)
     sliderBg.Text = ""
     sliderBg.ZIndex = 504
     sliderBg.Parent = frame
+    
+    local sliderCorner = Instance.new("UICorner")
+    sliderCorner.CornerRadius = UDim.new(1, 0)
+    sliderCorner.Parent = sliderBg
     
     local fill = Instance.new("Frame")
     fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
@@ -392,6 +451,10 @@ function UILibrary.AddSlider(parent, text, min, max, default, callback)
     fill.BorderSizePixel = 0
     fill.ZIndex = 505
     fill.Parent = sliderBg
+    
+    local fillCorner = Instance.new("UICorner")
+    fillCorner.CornerRadius = UDim.new(1, 0)
+    fillCorner.Parent = fill
     
     local dragging = false
     local function UpdateSlider(input)
@@ -409,13 +472,13 @@ function UILibrary.AddSlider(parent, text, min, max, default, callback)
         end
     end)
     
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
+    UserInputService.InputChanged:Connect(function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             UpdateSlider(input)
         end
     end)
     
-    game:GetService("UserInputService").InputEnded:Connect(function(input)
+    UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
         end
@@ -425,7 +488,7 @@ end
 function UILibrary.AddDropdown(parent, text, options, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1, -8, 0, 36)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
+    frame.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
     frame.ZIndex = 503
     frame.Parent = parent
     
@@ -434,7 +497,7 @@ function UILibrary.AddDropdown(parent, text, options, callback)
     corner.Parent = frame
     
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(32, 38, 52)
+    stroke.Color = Color3.fromRGB(30, 36, 50)
     stroke.Thickness = 1
     stroke.Parent = frame
     
@@ -453,7 +516,7 @@ function UILibrary.AddDropdown(parent, text, options, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.54, -8, 0, 24)
     btn.Position = UDim2.new(0.46, 0, 0.5, -12)
-    btn.BackgroundColor3 = Color3.fromRGB(32, 38, 54)
+    btn.BackgroundColor3 = Color3.fromRGB(28, 34, 48)
     btn.Text = options[1] or "Select"
     btn.TextColor3 = Color3.fromRGB(0, 220, 255)
     btn.Font = Enum.Font.GothamBold

@@ -1,6 +1,6 @@
 --[[
     ===================================================================================
-    ★ BLOX FRUITS ULTIMATE HUB V7.5 (MULTI-FILE MODULAR PRODUCTION LOADER) ★
+    ★ BLOX FRUITS ULTIMATE HUB V8.0 (MODULAR SUPREME MASTER LOADER) ★
     Tác giả: lehung14122610-prog
     Repository: https://github.com/lehung14122610-prog/BloxFruits-Script
     Hỗ trợ 100%: DeltaX, Delta, Solara, Wave, Arceus X, Codex (PC, Android & BlueStacks)
@@ -34,8 +34,8 @@ end
 -- Thông báo nạp
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ Titan Hub v7.5",
-        Text = "Đang khởi tạo hệ thống Multi-File...",
+        Title = "⚡ Titan Hub v8.0",
+        Text = "Đang nạp hệ thống Max Lv 2800...",
         Duration = 3
     })
 end)
@@ -50,8 +50,8 @@ getgenv().BF_Hub_Config = {
     SelectedMob = "",
     SelectedBoss = "",
     SelectedWeapon = "Melee",
-    FarmHeight = 13.5,
-    FarmDistance = 1.5,
+    FarmHeight = 12.0,
+    FarmDistance = 1.0,
     FastAttack = true,
     BringMobs = true,
     BringRadius = 380,
@@ -91,7 +91,7 @@ getgenv().BF_Hub_Config = {
 
 local Config = getgenv().BF_Hub_Config
 local HttpService = game:GetService("HttpService")
-local ConfigFileName = "BF_Hub_Titan_Config_v7.json"
+local ConfigFileName = "BF_Hub_Titan_Config_v8.json"
 
 local function SaveConfig()
     pcall(function()
@@ -135,10 +135,10 @@ local TabLag = UI.CreateTab("Fix Lag & FPS", "⚡")
 local TabSettings = UI.CreateTab("System", "⚙️")
 
 -- 4. TAB: MAIN FARM
-UI.AddSection(TabFarm, "Cài Đặt Farm Căn Bản")
+UI.AddSection(TabFarm, "Cài Đặt Auto Farm Level (1 -> 2800)")
 UI.AddDropdown(TabFarm, "Vũ Khí Farm:", {"Melee", "Sword", "Blox Fruit", "Gun"}, function(v) Config.SelectedWeapon = v SaveConfig() end)
-UI.AddSlider(TabFarm, "Độ Cao An Toàn (Studs)", 8, 25, Config.FarmHeight, function(v) Config.FarmHeight = v SaveConfig() end)
-UI.AddToggle(TabFarm, "🌾 Auto Farm Level (Lv 1 -> 2550)", Config.AutoFarmLevel, function(v) Config.AutoFarmLevel = v SaveConfig() end)
+UI.AddSlider(TabFarm, "Độ Cao An Toàn Trên Không (Studs)", 8, 25, Config.FarmHeight, function(v) Config.FarmHeight = v SaveConfig() end)
+UI.AddToggle(TabFarm, "🌾 Auto Farm Level (1 -> 2800 Max)", Config.AutoFarmLevel, function(v) Config.AutoFarmLevel = v SaveConfig() end)
 
 UI.AddSection(TabFarm, "Farm Quái & Boss Tuỳ Chọn")
 local mobList = {}
@@ -154,16 +154,16 @@ local bossList = {}
 for k, _ in pairs(IslandsData.Bosses or {}) do table.insert(bossList, k) end
 UI.AddDropdown(TabFarm, "Chọn Boss Mục Tiêu:", bossList, function(v) Config.SelectedBoss = v SaveConfig() end)
 UI.AddToggle(TabFarm, "👑 Auto Farm Boss Đã Chọn", Config.AutoFarmBoss, function(v) Config.AutoFarmBoss = v SaveConfig() end)
-UI.AddToggle(TabFarm, "📦 Auto Farm Rương (Chest Farm)", Config.AutoFarmChest, function(v) Config.AutoFarmChest = v SaveConfig() end)
+UI.AddToggle(TabFarm, "📦 Auto Farm Rương (Nhặt Tiền Cực Nhanh)", Config.AutoFarmChest, function(v) Config.AutoFarmChest = v SaveConfig() end)
 
 -- 5. TAB: COMBAT & SKILLS
 UI.AddSection(TabCombat, "Đòn Đánh & Gom Quái")
 UI.AddToggle(TabCombat, "⚡ Fast Attack V3 (Đòn Đánh Siêu Tốc)", Config.FastAttack, function(v) Config.FastAttack = v SaveConfig() end)
-UI.AddToggle(TabCombat, "🌀 Gom Quái V3 (Bring Mobs 3D)", Config.BringMobs, function(v) Config.BringMobs = v SaveConfig() end)
+UI.AddToggle(TabCombat, "🌀 Gom Quái 3D (Bring Mobs)", Config.BringMobs, function(v) Config.BringMobs = v SaveConfig() end)
 UI.AddSlider(TabCombat, "Bán Kính Gom Quái (Studs)", 100, 500, Config.BringRadius, function(v) Config.BringRadius = v SaveConfig() end)
 
 -- 6. TAB: BAY & TRAVEL
-UI.AddSection(TabFly, "Dịch Chuyển Đến Đảo")
+UI.AddSection(TabFly, "Dịch Chuyển Đến Đảo (Tween An Toàn)")
 local islandList = {}
 for k, _ in pairs(IslandsData.Islands or {}) do table.insert(islandList, k) end
 UI.AddDropdown(TabFly, "Chọn Đảo Đến:", islandList, function(v) Config.SelectedIsland = v SaveConfig() end)
@@ -172,13 +172,13 @@ UI.AddButton(TabFly, "🚀 Bay Đến Đảo Đã Chọn", function()
     if pos then Movement.SafeWayPointTween(CFrame.new(pos + Vector3.new(0, 60, 0))) end
 end)
 
-UI.AddSection(TabFly, "Kỹ Năng Bay & Di Chuyển")
+UI.AddSection(TabFly, "Kỹ Năng Bay Tự Do (Không Rung Lắc / Không Văng)")
 UI.AddToggle(TabFly, "✈️ Bay Tự Do V2 (Free Fly)", Config.Fly, function(v) 
     Config.Fly = v 
     if v then Movement.StartFly(Config.FlySpeed) else Movement.StopFly() end
     SaveConfig()
 end)
-UI.AddSlider(TabFly, "Tốc Độ Bay", 20, 250, Config.FlySpeed, function(v) 
+UI.AddSlider(TabFly, "Tốc Độ Bay Tự Do", 20, 250, Config.FlySpeed, function(v) 
     Config.FlySpeed = v 
     if Config.Fly then Movement.StartFly(Config.FlySpeed) end
     SaveConfig()
@@ -209,13 +209,13 @@ UI.AddToggle(TabSettings, "💤 Anti-AFK (Chống Văng Game)", Config.AntiAFK, 
 UI.AddButton(TabSettings, "🔄 Rejoin Current Server", function() if Utils then Utils.RejoinServer() end end)
 UI.AddButton(TabSettings, "🌐 Server Hop (Tìm Server Ít Người)", function() if Utils then Utils.ServerHop() end end)
 
--- 8. TIẾN TRÌNH AUTO FARM CHÍNH
+-- 8. TIẾN TRÌNH AUTO FARM STATE MACHINE CHUẨN V8.0
 local function GetQuestForCurrentLevel()
     local level = Network.GetPlayerLevelSafe()
     for _, q in ipairs(QuestsData) do
         if level >= q.MinLvl and level <= q.MaxLvl then return q end
     end
-    return QuestsData[1]
+    return QuestsData[#QuestsData]
 end
 
 local function HasActiveQuest()
@@ -243,6 +243,7 @@ local function BringAndFreezeMobs(targetCenterCF)
     end
 end
 
+-- MASTER AUTO FARM LOOP
 task.spawn(function()
     while task.wait(0.08) do
         local root = Network.GetRoot()
@@ -253,7 +254,7 @@ task.spawn(function()
                 local quest = GetQuestForCurrentLevel()
                 if quest then
                     if not HasActiveQuest() then
-                        Movement.DisableGravityLock()
+                        Movement.DisableHoverLock()
                         Movement.TweenTo(quest.NpcCFrame)
                         if (root.Position - quest.NpcCFrame.Position).Magnitude < 16 then
                             Network.InvokeCommF("StartQuest", quest.QuestName, quest.QuestLvl)
@@ -273,12 +274,11 @@ task.spawn(function()
                         
                         if targetMob then
                             local safeFarmCF = targetMob.HumanoidRootPart.CFrame * CFrame.new(0, Config.FarmHeight, Config.FarmDistance) * CFrame.Angles(math.rad(-90), 0, 0)
-                            Movement.EnableGravityLock(safeFarmCF)
-                            root.CFrame = safeFarmCF
+                            Movement.EnableHoverLock(safeFarmCF)
                             BringAndFreezeMobs(targetMob.HumanoidRootPart.CFrame)
                             Network.ExecuteFastAttack(Config.SelectedWeapon)
                         else
-                            Movement.DisableGravityLock()
+                            Movement.DisableHoverLock()
                             Movement.TweenTo(quest.MobCFrame)
                         end
                     end
@@ -296,12 +296,11 @@ task.spawn(function()
                 end
                 if targetMob then
                     local safeFarmCF = targetMob.HumanoidRootPart.CFrame * CFrame.new(0, Config.FarmHeight, Config.FarmDistance) * CFrame.Angles(math.rad(-90), 0, 0)
-                    Movement.EnableGravityLock(safeFarmCF)
-                    root.CFrame = safeFarmCF
+                    Movement.EnableHoverLock(safeFarmCF)
                     BringAndFreezeMobs(targetMob.HumanoidRootPart.CFrame)
                     Network.ExecuteFastAttack(Config.SelectedWeapon)
                 else
-                    Movement.DisableGravityLock()
+                    Movement.DisableHoverLock()
                 end
             elseif Config.AutoFarmBoss then
                 local enemies = game:GetService("Workspace"):FindFirstChild("Enemies")
@@ -316,24 +315,65 @@ task.spawn(function()
                 end
                 if targetBoss then
                     local safeFarmCF = targetBoss.HumanoidRootPart.CFrame * CFrame.new(0, Config.FarmHeight, Config.FarmDistance) * CFrame.Angles(math.rad(-90), 0, 0)
-                    Movement.EnableGravityLock(safeFarmCF)
-                    root.CFrame = safeFarmCF
+                    Movement.EnableHoverLock(safeFarmCF)
                     BringAndFreezeMobs(targetBoss.HumanoidRootPart.CFrame)
                     Network.ExecuteFastAttack(Config.SelectedWeapon)
                 else
-                    Movement.DisableGravityLock()
+                    Movement.DisableHoverLock()
                     if IslandsData.Bosses and IslandsData.Bosses[Config.SelectedBoss] then
                         Movement.TweenTo(CFrame.new(IslandsData.Bosses[Config.SelectedBoss] + Vector3.new(0, 50, 0)))
                     end
                 end
             end
         else
-            if not Config.Fly then Movement.DisableGravityLock() end
+            if not Config.Fly then Movement.DisableHoverLock() end
         end
     end
 end)
 
--- 9. NẠP CÁC MODULE CHUYÊN BIỆT THEO SEA
+-- 9. SỬA LỖI AUTO FARM RƯƠNG (CHEST FARM V8.0 VỚI FIRETOUCHINTEREST)
+task.spawn(function()
+    while task.wait(0.2) do
+        if Config.AutoFarmChest then
+            local root = Network.GetRoot()
+            if root then
+                local foundChest = nil
+                local minDist = 9e9
+                local ws = game:GetService("Workspace")
+                local chestFolder = ws:FindFirstChild("ChestModels") or ws:FindFirstChild("Chests") or ws
+                
+                for _, obj in pairs(chestFolder:GetChildren()) do
+                    if obj.Name:find("Chest") or obj.Name:find("ChestModels") then
+                        local part = obj:IsA("BasePart") and obj or obj:FindFirstChildOfClass("BasePart")
+                        if part and (not obj:FindFirstChild("Collected") or obj.Collected.Value ~= true) then
+                            local d = (root.Position - part.Position).Magnitude
+                            if d < minDist then
+                                minDist = d
+                                foundChest = part
+                            end
+                        end
+                    end
+                end
+                
+                if foundChest then
+                    Movement.TweenTo(foundChest.CFrame * CFrame.new(0, 2.5, 0), 320)
+                    if (root.Position - foundChest.Position).Magnitude < 8 then
+                        pcall(function()
+                            if firetouchinterest then
+                                firetouchinterest(root, foundChest, 0)
+                                task.wait(0.05)
+                                firetouchinterest(root, foundChest, 1)
+                            end
+                        end)
+                        task.wait(0.25)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- 10. NẠP CÁC MODULE THEO SEA & ESP
 local PlaceId = game.PlaceId
 if PlaceId == 2753915549 then
     local Sea1 = LoadModule("Modules/Sea1.lua")
@@ -349,15 +389,14 @@ else
     if Sea1 and Sea1.Init then Sea1.Init(UI, Config, Network, Movement, IslandsData) end
 end
 
--- 10. NẠP MODULE ESP & TRÁI ÁC QUỶ
 local ESPMod = LoadModule("Modules/ESP_FruitFinder.lua")
 if ESPMod and ESPMod.Init then ESPMod.Init(UI, TabESP, TabFruit, Config, Network, Movement) end
 
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "🔥 TITAN HUB V7.5 SẴN SÀNG",
-        Text = "Giao diện đã nạp hoàn tất 100%!",
+        Title = "🔥 TITAN HUB V8.0",
+        Text = "Giao diện Max Lv 2800 đã sẵn sàng!",
         Duration = 5
     })
 end)
-print("★ BLOX FRUITS TITAN HUB V7.5 (MULTI-FILE PRODUCTION) LOADED 100% ★")
+print("★ BLOX FRUITS TITAN HUB V8.0 (MAX LV 2800 SUPREME EDITION) LOADED ★")
